@@ -59,9 +59,9 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
         brand: {
-          coral: "hsl(var(--brand-coral))",
-          "coral-light": "hsl(var(--brand-coral-light))",
-          "coral-dark": "hsl(var(--brand-coral-dark))",
+          pink: "hsl(333 73% 50%)",
+          "pink-light": "hsl(333 73% 95%)",
+          "pink-dark": "hsl(333 73% 40%)",
         },
         surface: {
           light: "hsl(var(--surface-light))",

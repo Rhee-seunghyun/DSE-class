@@ -8,7 +8,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 0 0% 94.5%; /* #f1f1f1 */
     --foreground: 220 20% 15%;
 
     --card: 0 0% 100%;
@@ -17,8 +17,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 20% 15%;
 
-    /* Coral/Pink brand color from reference */
-    --primary: 348 82% 57%;
+    /* Brand pink #da2576 */
+    --primary: 333 73% 50%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 14% 96%;
@@ -27,8 +27,8 @@
     --muted: 220 14% 96%;
     --muted-foreground: 220 10% 46%;
 
-    --accent: 348 82% 95%;
-    --accent-foreground: 348 82% 45%;
+    --accent: 333 73% 95%;
+    --accent-foreground: 333 73% 40%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -41,25 +41,25 @@
 
     --border: 220 14% 90%;
     --input: 220 14% 90%;
-    --ring: 348 82% 57%;
+    --ring: 333 73% 50%;
 
     --radius: 0.75rem;
 
     /* Custom DoABLE tokens */
-    --brand-coral: 348 82% 57%;
-    --brand-coral-light: 348 82% 95%;
-    --brand-coral-dark: 348 82% 45%;
-    --surface-light: 220 20% 97%;
+    --brand-coral: 333 73% 50%;
+    --brand-coral-light: 333 73% 95%;
+    --brand-coral-dark: 333 73% 40%;
+    --surface-light: 0 0% 94.5%;
     --surface-medium: 220 14% 94%;
 
-    --sidebar-background: 0 0% 98%;
+    --sidebar-background: 0 0% 100%; /* #ffffff */
     --sidebar-foreground: 220 20% 25%;
-    --sidebar-primary: 348 82% 57%;
+    --sidebar-primary: 333 73% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 348 82% 95%;
-    --sidebar-accent-foreground: 348 82% 45%;
+    --sidebar-accent: 333 73% 95%;
+    --sidebar-accent-foreground: 333 73% 40%;
     --sidebar-border: 220 14% 90%;
-    --sidebar-ring: 348 82% 57%;
+    --sidebar-ring: 333 73% 50%;
   }
 
   .dark {
@@ -72,7 +72,7 @@
     --popover: 220 20% 12%;
     --popover-foreground: 220 14% 96%;
 
-    --primary: 348 82% 60%;
+    --primary: 333 73% 55%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 20% 18%;
@@ -81,8 +81,8 @@
     --muted: 220 20% 18%;
     --muted-foreground: 220 14% 60%;
 
-    --accent: 348 50% 20%;
-    --accent-foreground: 348 82% 70%;
+    --accent: 333 50% 20%;
+    --accent-foreground: 333 73% 70%;
 
     --destructive: 0 62% 40%;
     --destructive-foreground: 0 0% 100%;
@@ -95,22 +95,22 @@
 
     --border: 220 20% 20%;
     --input: 220 20% 20%;
-    --ring: 348 82% 60%;
+    --ring: 333 73% 55%;
 
-    --brand-coral: 348 82% 60%;
-    --brand-coral-light: 348 50% 20%;
-    --brand-coral-dark: 348 82% 70%;
+    --brand-coral: 333 73% 55%;
+    --brand-coral-light: 333 50% 20%;
+    --brand-coral-dark: 333 73% 70%;
     --surface-light: 220 20% 12%;
     --surface-medium: 220 20% 15%;
 
     --sidebar-background: 220 20% 10%;
     --sidebar-foreground: 220 14% 90%;
-    --sidebar-primary: 348 82% 60%;
+    --sidebar-primary: 333 73% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 348 50% 20%;
-    --sidebar-accent-foreground: 348 82% 70%;
+    --sidebar-accent: 333 50% 20%;
+    --sidebar-accent-foreground: 333 73% 70%;
     --sidebar-border: 220 20% 20%;
-    --sidebar-ring: 348 82% 60%;
+    --sidebar-ring: 333 73% 55%;
   }
 }
 
@@ -130,11 +130,21 @@
 
 @layer components {
   .brand-gradient {
-    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(348 90% 65%) 100%);
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(333 80% 60%) 100%);
   }
 
   .surface-gradient {
     background: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--surface-light)) 100%);
+  }
+
+  /* Subtle grid pattern for content area */
+  .grid-pattern {
+    background-color: hsl(0 0% 94.5%);
+    background-image: 
+      linear-gradient(hsl(0 0% 88%) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(0 0% 88%) 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-position: -1px -1px;
   }
 
   .watermark {
