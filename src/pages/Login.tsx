@@ -75,7 +75,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full h-12 text-base font-medium text-white transition-opacity disabled:opacity-50"
+              className="w-full h-12 mt-8 text-base font-medium text-white transition-opacity disabled:opacity-50"
               style={{ backgroundColor: '#E94560' }}
             >
               {isLoading ? '로그인 중...' : 'Sign in'}
