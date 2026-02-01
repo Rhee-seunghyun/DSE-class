@@ -30,24 +30,30 @@ export default function Signup() {
 
     setIsLoading(true);
 
-    // Check if email is in whitelist
-    const { data: whitelistEntry, error: whitelistError } = await supabase
-      .from('whitelist')
-      .select('*')
-      .eq('email', email.toLowerCase())
-      .maybeSingle();
+    // Master email bypasses whitelist check
+    const MASTER_EMAIL = 'omsrheesh@gmail.com';
+    const isMasterEmail = email.toLowerCase() === MASTER_EMAIL;
+    
+    if (!isMasterEmail) {
+      // Check if email is in whitelist
+      const { data: whitelistEntry, error: whitelistError } = await supabase
+        .from('whitelist')
+        .select('*')
+        .eq('email', email.toLowerCase())
+        .maybeSingle();
 
-    if (whitelistError || !whitelistEntry) {
-      toast({
-        variant: 'destructive',
-        title: '가입 불가',
-        description: '사전 등록된 이메일만 가입이 가능합니다. 관리자에게 문의해주세요.',
-      });
-      setIsLoading(false);
-      return;
+      if (whitelistError || !whitelistEntry) {
+        toast({
+          variant: 'destructive',
+          title: '가입 불가',
+          description: '사전 등록된 이메일만 가입이 가능합니다. 관리자에게 문의해주세요.',
+        });
+        setIsLoading(false);
+        return;
+      }
     }
 
-    const { error } = await signUp(email, password, fullName, whitelistEntry.license_number || undefined);
+    const { error } = await signUp(email, password, fullName, licenseNumber || undefined);
 
     if (error) {
       toast({
@@ -56,11 +62,13 @@ export default function Signup() {
         description: error.message || '회원가입 중 오류가 발생했습니다.',
       });
     } else {
-      // Update whitelist to mark as registered
-      await supabase
-        .from('whitelist')
-        .update({ is_registered: true })
-        .eq('email', email.toLowerCase());
+      // Update whitelist to mark as registered (only for non-master accounts)
+      if (!isMasterEmail) {
+        await supabase
+          .from('whitelist')
+          .update({ is_registered: true })
+          .eq('email', email.toLowerCase());
+      }
 
       toast({
         title: '회원가입 완료',
