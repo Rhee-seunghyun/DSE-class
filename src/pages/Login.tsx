@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import doableLogo from '@/assets/doable-logo.png';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -31,18 +32,18 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="h-screen overflow-hidden flex">
       {/* Left side - Login Form */}
-      <div className="flex-1 flex flex-col justify-center px-16 xl:px-24 bg-white">
+      <div className="flex-1 flex flex-col justify-center px-16 xl:px-24" style={{ backgroundColor: '#ffffff' }}>
         <div className="w-full max-w-md">
-          <h1 className="text-5xl font-light tracking-tight text-foreground mb-1" style={{ fontFamily: 'system-ui, sans-serif' }}>
+          <h1 className="text-6xl font-light tracking-tight text-foreground mb-2" style={{ fontFamily: 'system-ui, sans-serif' }}>
             Welcome
           </h1>
-          <p className="text-foreground text-base mb-12">
+          <p className="text-foreground text-base mb-16">
             Please enter your details
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-12">
             <div>
               <label htmlFor="email" className="block text-base text-foreground mb-2">
                 E-mail
@@ -53,7 +54,7 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full border-0 border-b border-gray-300 bg-transparent py-2 text-foreground focus:border-primary focus:outline-none focus:ring-0"
+                className="w-full h-12 px-4 bg-[#f0f0f0] text-foreground placeholder:text-muted-foreground focus:outline-none"
               />
             </div>
 
@@ -67,14 +68,14 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full border-0 border-b border-gray-300 bg-transparent py-2 text-foreground focus:border-primary focus:outline-none focus:ring-0"
+                className="w-full h-12 px-4 bg-[#f0f0f0] text-foreground placeholder:text-muted-foreground focus:outline-none"
               />
             </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full h-12 text-base font-medium text-white rounded-md transition-opacity disabled:opacity-50"
+              className="w-full h-12 text-base font-medium text-white transition-opacity disabled:opacity-50"
               style={{ backgroundColor: '#E94560' }}
             >
               {isLoading ? '로그인 중...' : 'Sign in'}
@@ -84,16 +85,13 @@ export default function Login() {
       </div>
 
       {/* Right side - Logo */}
-      <div className="hidden lg:flex flex-1 items-center justify-center" style={{ backgroundColor: '#F5F5F5' }}>
-        <div className="text-center">
-          <h1 className="text-6xl font-bold tracking-tight">
-            <span className="text-foreground">Do</span>
-            <span style={{ color: '#E94560' }}>ABLE</span>
-          </h1>
-          <p className="text-lg font-semibold tracking-[0.3em] mt-2" style={{ color: '#E94560' }}>
-            DENTAL SEDATION COURSE
-          </p>
-        </div>
+      <div className="hidden lg:flex flex-1 items-center justify-center" style={{ backgroundColor: '#f1f1f1' }}>
+        <img
+          src={doableLogo}
+          alt="DoABLE"
+          className="w-2/3 max-w-3xl h-auto"
+          draggable={false}
+        />
       </div>
     </div>
   );
