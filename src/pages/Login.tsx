@@ -43,7 +43,7 @@ export default function Login() {
             Please enter your details
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-12">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="email" className="block text-base text-foreground mb-2">
                 E-mail
