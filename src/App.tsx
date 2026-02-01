@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import MyLectures from "./pages/MyLectures";
+import MyClass from "./pages/MyClass";
 import LectureRoom from "./pages/LectureRoom";
 import Lectures from "./pages/Lectures";
 import LectureEdit from "./pages/LectureEdit";
@@ -38,12 +39,20 @@ const App = () => (
               } 
             />
             <Route 
+              path="/my-class" 
+              element={
+                <ProtectedRoute allowedRoles={['master', 'speaker']}>
+                  <MyClass />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/my-lectures" 
               element={
                 <ProtectedRoute allowedRoles={['student']}>
                   <MyLectures />
                 </ProtectedRoute>
-              } 
+              }
             />
             <Route 
               path="/lecture/:id" 

@@ -2,9 +2,21 @@ import { useAuth } from '@/hooks/useAuth';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BookOpen, Users, Shield, FileText } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 
 export default function Dashboard() {
   const { profile, role } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect master/speaker to my-class, student to my-lectures
+  useEffect(() => {
+    if (role === 'master' || role === 'speaker') {
+      navigate('/my-class', { replace: true });
+    } else if (role === 'student') {
+      navigate('/my-lectures', { replace: true });
+    }
+  }, [role, navigate]);
 
   const getRoleLabel = (role: string | null) => {
     switch (role) {
@@ -32,7 +44,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {role === 'speaker' && (
             <>
-              <Card>
+              <Card className="bg-card">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     내 강의
@@ -47,7 +59,7 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-card">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     수강생
@@ -62,7 +74,7 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-card">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     보안 이벤트
@@ -81,7 +93,7 @@ export default function Dashboard() {
 
           {role === 'student' && (
             <>
-              <Card>
+              <Card className="bg-card">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     수강 강의
@@ -96,7 +108,7 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-card">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     내 노트
@@ -115,7 +127,7 @@ export default function Dashboard() {
 
           {role === 'master' && (
             <>
-              <Card>
+              <Card className="bg-card">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     총 연자
@@ -130,7 +142,7 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-card">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     총 강의
@@ -145,7 +157,7 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-card">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     보안 이벤트
@@ -164,7 +176,7 @@ export default function Dashboard() {
         </div>
 
         {/* Recent Activity */}
-        <Card>
+        <Card className="bg-card">
           <CardHeader>
             <CardTitle>최근 활동</CardTitle>
             <CardDescription>

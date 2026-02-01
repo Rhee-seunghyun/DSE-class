@@ -1,18 +1,16 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { Logo } from '@/components/Logo';
 import { Button } from '@/components/ui/button';
 import { 
-  LayoutDashboard, 
   BookOpen, 
   Users, 
-  Shield, 
   LogOut,
-  FileText,
-  Settings
+  Presentation,
+  Mic
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import doableLogo from '@/assets/doable-logo-new.png';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -22,54 +20,32 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { role, profile, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/login');
   };
 
+  // Navigation items based on the reference design
   const navItems = [
     { 
-      href: '/dashboard', 
-      label: '대시보드', 
-      icon: LayoutDashboard,
-      roles: ['master', 'speaker', 'student'] 
-    },
-    { 
-      href: '/lectures', 
-      label: '강의 관리', 
-      icon: BookOpen,
-      roles: ['speaker'] 
-    },
-    { 
-      href: '/my-lectures', 
-      label: '내 강의', 
-      icon: FileText,
-      roles: ['student'] 
-    },
-    { 
-      href: '/whitelist', 
-      label: '수강생 관리', 
-      icon: Users,
-      roles: ['speaker'] 
-    },
-    { 
-      href: '/speakers', 
-      label: '연자 관리', 
-      icon: Users,
-      roles: ['master'] 
-    },
-    { 
-      href: '/security-logs', 
-      label: '보안 로그', 
-      icon: Shield,
+      href: '/my-class', 
+      label: 'My class', 
+      icon: Presentation,
       roles: ['master', 'speaker'] 
     },
     { 
-      href: '/settings', 
-      label: '설정', 
-      icon: Settings,
-      roles: ['master', 'speaker', 'student'] 
+      href: '/speakers', 
+      label: 'Speaker', 
+      icon: Mic,
+      roles: ['master'] 
+    },
+    { 
+      href: '/my-lectures', 
+      label: 'My class', 
+      icon: BookOpen,
+      roles: ['student'] 
     },
   ];
 
@@ -78,14 +54,18 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   );
 
   return (
-    <div className="min-h-screen flex bg-background">
-      {/* Sidebar */}
-      <aside className="w-64 border-r border-border bg-sidebar flex flex-col">
-        <div className="p-6 border-b border-sidebar-border">
-          <Logo size="sm" />
-        </div>
-
-        <nav className="flex-1 p-4 space-y-1">
+    <div className="min-h-screen flex w-full">
+      {/* Sidebar - hover to expand */}
+      <aside 
+        className={cn(
+          "fixed left-0 top-0 h-full bg-sidebar border-r border-sidebar-border flex flex-col z-40 transition-all duration-300 ease-in-out",
+          isExpanded ? "w-56" : "w-16"
+        )}
+        onMouseEnter={() => setIsExpanded(true)}
+        onMouseLeave={() => setIsExpanded(false)}
+      >
+        {/* Nav items */}
+        <nav className="flex-1 py-8 px-2 space-y-2">
           {filteredNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.href;
@@ -95,42 +75,63 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 key={item.href}
                 to={item.href}
                 className={cn(
-                  'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm font-medium',
+                  'flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 text-sm font-medium overflow-hidden',
                   isActive
                     ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                     : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
                 )}
               >
-                <Icon className="w-5 h-5" />
-                {item.label}
+                <Icon className="w-6 h-6 flex-shrink-0" strokeWidth={1.5} />
+                <span className={cn(
+                  "whitespace-nowrap transition-opacity duration-200",
+                  isExpanded ? "opacity-100" : "opacity-0"
+                )}>
+                  {item.label}
+                </span>
               </Link>
             );
           })}
         </nav>
 
-        <div className="p-4 border-t border-sidebar-border">
-          <div className="px-4 py-2 mb-2">
-            <p className="text-sm font-medium text-sidebar-foreground truncate">
-              {profile?.full_name}
-            </p>
-            <p className="text-xs text-muted-foreground truncate">
-              {profile?.email}
-            </p>
-          </div>
+        {/* User info & logout at bottom */}
+        <div className="p-2 border-t border-sidebar-border">
+          {isExpanded && (
+            <div className="px-3 py-2 mb-2">
+              <p className="text-sm font-medium text-sidebar-foreground truncate">
+                {profile?.full_name}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">
+                {profile?.email}
+              </p>
+            </div>
+          )}
           <Button
             variant="ghost"
             onClick={handleSignOut}
-            className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground"
+            className={cn(
+              "w-full gap-3 text-muted-foreground hover:text-foreground transition-all duration-200",
+              isExpanded ? "justify-start px-3" : "justify-center px-0"
+            )}
           >
-            <LogOut className="w-5 h-5" />
-            로그아웃
+            <LogOut className="w-5 h-5 flex-shrink-0" />
+            {isExpanded && <span>로그아웃</span>}
           </Button>
         </div>
       </aside>
 
-      {/* Main content */}
-      <main className="flex-1 overflow-auto">
-        <div className="container py-8">
+      {/* Main content with grid pattern */}
+      <main className={cn(
+        "flex-1 overflow-auto grid-pattern transition-all duration-300",
+        isExpanded ? "ml-56" : "ml-16"
+      )}>
+        {/* Header with logo */}
+        <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-sm border-b border-border">
+          <div className="flex items-center justify-end px-8 py-4">
+            <img src={doableLogo} alt="DoABLE" className="h-8" />
+          </div>
+        </header>
+        
+        <div className="p-8">
           {children}
         </div>
       </main>
