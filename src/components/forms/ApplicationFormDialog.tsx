@@ -1,5 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Copy } from 'lucide-react';
+import { Copy, Share2, Check } from 'lucide-react';
 
 interface ApplicationFormDialogProps {
   open: boolean;
@@ -65,6 +72,7 @@ export function ApplicationFormDialog({
   const [questions, setQuestions] = useState<FormQuestion[]>(defaultQuestions);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+  const [linkCopied, setLinkCopied] = useState(false);
 
   // Fetch existing form for editing
   const { data: existingForm } = useQuery({
@@ -283,22 +291,41 @@ export function ApplicationFormDialog({
     }
   };
 
+  const handlePublish = async () => {
+    if (!existingFormId) {
+      toast.error('먼저 신청서를 저장해주세요.');
+      return;
+    }
+
+    const formUrl = `${window.location.origin}/apply/${existingFormId}`;
+    
+    try {
+      await navigator.clipboard.writeText(formUrl);
+      setLinkCopied(true);
+      toast.success('신청서 링크가 복사되었습니다!');
+      
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch (error) {
+      toast.error('링크 복사에 실패했습니다.');
+    }
+  };
+
   const isPending = createFormMutation.isPending || updateFormMutation.isPending;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-full sm:max-w-2xl flex flex-col p-0">
+        <SheetHeader className="px-6 pt-6 pb-4 border-b">
+          <SheetTitle>
             {isEditMode ? '세미나 신청서 수정' : '세미나 신청서 작성'}
-          </DialogTitle>
-          <DialogDescription>
+          </SheetTitle>
+          <SheetDescription>
             수강생들이 작성할 신청서 양식을 만드세요.
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
-        <ScrollArea className="flex-1 max-h-[60vh] pr-4">
-          <div className="space-y-6 py-4">
+        <ScrollArea className="flex-1 px-6">
+          <div className="space-y-6 py-6">
             {/* Template selection - only show when creating new */}
             {!isEditMode && allForms && allForms.length > 0 && (
               <div className="space-y-2 p-4 bg-muted/50 rounded-lg">
@@ -350,6 +377,7 @@ export function ApplicationFormDialog({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="신청서에 대한 설명을 입력하세요"
+                className="min-h-[100px]"
               />
             </div>
 
@@ -360,7 +388,27 @@ export function ApplicationFormDialog({
           </div>
         </ScrollArea>
 
-        <DialogFooter className="mt-4">
+        <SheetFooter className="px-6 py-4 border-t flex-row gap-2">
+          {isEditMode && existingFormId && (
+            <Button
+              variant="outline"
+              onClick={handlePublish}
+              className="gap-2"
+            >
+              {linkCopied ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  복사됨
+                </>
+              ) : (
+                <>
+                  <Share2 className="w-4 h-4" />
+                  게시
+                </>
+              )}
+            </Button>
+          )}
+          <div className="flex-1" />
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             취소
           </Button>
@@ -376,8 +424,8 @@ export function ApplicationFormDialog({
               ? '신청서 수정'
               : '신청서 만들기'}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }

@@ -12,7 +12,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Plus, Trash2, GripVertical, AlignLeft } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 
 export type QuestionType = 'multiple_choice' | 'short_answer' | 'long_answer' | 'description';
 
@@ -106,8 +106,7 @@ export function FormBuilder({ questions, onQuestionsChange }: FormBuilderProps) 
 
   return (
     <div className="space-y-4">
-      <ScrollArea type="always" className="h-[320px] pr-4">
-        <div className="space-y-4">
+      <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
           {questions.map((question, index) => (
             <Card key={question.id} className="bg-card">
               <CardContent className="pt-4">
@@ -283,8 +282,7 @@ export function FormBuilder({ questions, onQuestionsChange }: FormBuilderProps) 
               </CardContent>
             </Card>
           ))}
-        </div>
-      </ScrollArea>
+      </div>
 
       <div className="flex gap-2">
         <Button variant="outline" onClick={addQuestion} className="flex-1 gap-2">
