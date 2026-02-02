@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Apply from "./pages/Apply";
 import Dashboard from "./pages/Dashboard";
 import MyLectures from "./pages/MyLectures";
 import MyClass from "./pages/MyClass";
@@ -94,6 +95,7 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
+            <Route path="/apply/:formId" element={<Apply />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
