@@ -14,6 +14,135 @@ export type Database = {
   }
   public: {
     Tables: {
+      application_forms: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          lecture_id: string
+          speaker_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          lecture_id: string
+          speaker_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          lecture_id?: string
+          speaker_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_forms_lecture_id_fkey"
+            columns: ["lecture_id"]
+            isOneToOne: false
+            referencedRelation: "lectures"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      form_questions: {
+        Row: {
+          created_at: string
+          form_id: string
+          id: string
+          is_required: boolean
+          options: Json | null
+          order_index: number
+          question_text: string
+          question_type: Database["public"]["Enums"]["question_type"]
+        }
+        Insert: {
+          created_at?: string
+          form_id: string
+          id?: string
+          is_required?: boolean
+          options?: Json | null
+          order_index?: number
+          question_text: string
+          question_type?: Database["public"]["Enums"]["question_type"]
+        }
+        Update: {
+          created_at?: string
+          form_id?: string
+          id?: string
+          is_required?: boolean
+          options?: Json | null
+          order_index?: number
+          question_text?: string
+          question_type?: Database["public"]["Enums"]["question_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_questions_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "application_forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      form_responses: {
+        Row: {
+          answers: Json
+          applicant_email: string
+          applicant_name: string
+          created_at: string
+          form_id: string
+          id: string
+          license_number: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          answers?: Json
+          applicant_email: string
+          applicant_name: string
+          created_at?: string
+          form_id: string
+          id?: string
+          license_number?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          answers?: Json
+          applicant_email?: string
+          applicant_name?: string
+          created_at?: string
+          form_id?: string
+          id?: string
+          license_number?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_responses_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "application_forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lecture_notes: {
         Row: {
           content: string
@@ -237,6 +366,7 @@ export type Database = {
     }
     Enums: {
       app_role: "master" | "speaker" | "student"
+      question_type: "multiple_choice" | "short_answer" | "long_answer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -365,6 +495,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["master", "speaker", "student"],
+      question_type: ["multiple_choice", "short_answer", "long_answer"],
     },
   },
 } as const

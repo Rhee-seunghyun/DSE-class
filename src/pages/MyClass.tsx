@@ -7,10 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Trash2, Pencil, ChevronDown, ChevronUp, Upload, FileText } from 'lucide-react';
+import { Plus, Trash2, Pencil, ChevronDown, ChevronUp, Upload, FileText, ClipboardList, Users } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { ApplicationFormDialog } from '@/components/forms/ApplicationFormDialog';
+import { FormResponsesDialog } from '@/components/forms/FormResponsesDialog';
 interface StudentEntry {
   id: string;
   student_name: string | null;
@@ -28,6 +30,8 @@ export default function MyClass() {
   const [selectedLectureId, setSelectedLectureId] = useState<string | null>(null);
   const [isTableVisible, setIsTableVisible] = useState(true);
   const [editingStudent, setEditingStudent] = useState<StudentEntry | null>(null);
+  const [isApplicationFormDialogOpen, setIsApplicationFormDialogOpen] = useState(false);
+  const [isResponsesDialogOpen, setIsResponsesDialogOpen] = useState(false);
 
   // Form states for creating class
   const [newClassTitle, setNewClassTitle] = useState('');
@@ -90,7 +94,22 @@ export default function MyClass() {
     enabled: !!selectedLectureId
   });
 
-  // Create new class mutation
+  // Fetch application form for selected lecture
+  const { data: applicationForm } = useQuery({
+    queryKey: ['application-forms', selectedLectureId],
+    queryFn: async () => {
+      if (!selectedLectureId) return null;
+      const { data, error } = await supabase
+        .from('application_forms')
+        .select('*')
+        .eq('lecture_id', selectedLectureId)
+        .eq('is_active', true)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedLectureId
+  });
   const createClassMutation = useMutation({
     mutationFn: async () => {
       if (!profile?.user_id) throw new Error('로그인이 필요합니다.');
@@ -316,6 +335,24 @@ export default function MyClass() {
                   {isTableVisible ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </Button>
                 <div className="flex gap-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="gap-1"
+                    onClick={() => setIsApplicationFormDialogOpen(true)}
+                  >
+                    <ClipboardList className="w-4 h-4" />
+                    세미나 신청서 작성
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="gap-1"
+                    onClick={() => setIsResponsesDialogOpen(true)}
+                  >
+                    <Users className="w-4 h-4" />
+                    신청 목록
+                  </Button>
                   <label>
                     <input
                       type="file"
@@ -451,6 +488,29 @@ export default function MyClass() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Application Form Dialog */}
+        {selectedLecture && profile?.user_id && (
+          <ApplicationFormDialog
+            open={isApplicationFormDialogOpen}
+            onOpenChange={setIsApplicationFormDialogOpen}
+            lectureId={selectedLecture.id}
+            speakerId={profile.user_id}
+            lectureTitle={selectedLecture.title}
+          />
+        )}
+
+        {/* Form Responses Dialog */}
+        {applicationForm && selectedLecture && profile?.user_id && (
+          <FormResponsesDialog
+            open={isResponsesDialogOpen}
+            onOpenChange={setIsResponsesDialogOpen}
+            formId={applicationForm.id}
+            formTitle={applicationForm.title}
+            lectureId={selectedLecture.id}
+            speakerId={profile.user_id}
+          />
+        )}
       </div>
     </DashboardLayout>;
 }
