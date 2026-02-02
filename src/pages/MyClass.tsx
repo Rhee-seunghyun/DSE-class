@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,7 +11,6 @@ import { Plus, Trash2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
 interface StudentEntry {
   id: string;
   student_name: string | null;
@@ -56,6 +55,13 @@ export default function MyClass() {
     },
     enabled: !!profile?.user_id
   });
+
+  // Auto-select first lecture when data loads
+  useEffect(() => {
+    if (lectures && lectures.length > 0 && !selectedLectureId) {
+      setSelectedLectureId(lectures[0].id);
+    }
+  }, [lectures, selectedLectureId]);
 
   // Fetch whitelist for selected lecture
   const {
@@ -205,11 +211,11 @@ export default function MyClass() {
         </Dialog>
 
         {/* Class List */}
-        {lecturesLoading ? <div className="text-muted-foreground">로딩 중...</div> : lectures && lectures.length > 0 ? <div className="flex gap-2 flex-wrap">
-            {lectures.map(lecture => <Button key={lecture.id} variant={selectedLectureId === lecture.id ? "default" : "outline"} onClick={() => setSelectedLectureId(lecture.id)} className="text-sm">
-                {lecture.title}
-              </Button>)}
-          </div> : <p className="text-muted-foreground">생성된 클래스가 없습니다. + class 버튼을 눌러 새 클래스를 만드세요.</p>}
+        {lecturesLoading ? (
+          <div className="text-muted-foreground">로딩 중...</div>
+        ) : !lectures || lectures.length === 0 ? (
+          <p className="text-muted-foreground">생성된 클래스가 없습니다. + class 버튼을 눌러 새 클래스를 만드세요.</p>
+        ) : null}
 
         {/* Selected Class Detail */}
         {selectedLecture && <Card className="bg-card">
