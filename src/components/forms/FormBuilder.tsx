@@ -2,7 +2,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { Plus, Trash2, GripVertical } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
@@ -78,7 +84,7 @@ export function FormBuilder({ questions, onQuestionsChange }: FormBuilderProps) 
 
   return (
     <div className="space-y-4">
-      <ScrollArea className="max-h-[300px] pr-4">
+      <ScrollArea type="always" className="h-[320px] pr-4">
         <div className="space-y-4">
           {questions.map((question, index) => (
             <Card key={question.id} className="bg-card">
