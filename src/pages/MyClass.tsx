@@ -6,19 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Trash2, Pencil, ChevronDown, ChevronUp, Upload, FileText, ClipboardList, Users } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, Upload, FileText, ClipboardList, Users } from 'lucide-react';
+import { StudentTable, StudentData } from '@/components/student/StudentTable';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ApplicationFormDialog } from '@/components/forms/ApplicationFormDialog';
 import { FormResponsesDialog } from '@/components/forms/FormResponsesDialog';
-interface StudentEntry {
-  id: string;
-  student_name: string | null;
-  email: string;
-  license_number: string | null;
-}
+// StudentEntry is now handled by StudentData from StudentTable component
 export default function MyClass() {
   const {
     profile
@@ -29,7 +24,7 @@ export default function MyClass() {
   const [isEditStudentDialogOpen, setIsEditStudentDialogOpen] = useState(false);
   const [selectedLectureId, setSelectedLectureId] = useState<string | null>(null);
   const [isTableVisible, setIsTableVisible] = useState(true);
-  const [editingStudent, setEditingStudent] = useState<StudentEntry | null>(null);
+  const [editingStudent, setEditingStudent] = useState<StudentData | null>(null);
   const [isApplicationFormDialogOpen, setIsApplicationFormDialogOpen] = useState(false);
   const [isResponsesDialogOpen, setIsResponsesDialogOpen] = useState(false);
 
@@ -42,11 +37,13 @@ export default function MyClass() {
   const [studentName, setStudentName] = useState('');
   const [studentEmail, setStudentEmail] = useState('');
   const [studentLicense, setStudentLicense] = useState('');
+  const [studentPhone, setStudentPhone] = useState('');
 
   // Edit student form states
   const [editStudentName, setEditStudentName] = useState('');
   const [editStudentEmail, setEditStudentEmail] = useState('');
   const [editStudentLicense, setEditStudentLicense] = useState('');
+  const [editStudentPhone, setEditStudentPhone] = useState('');
 
   // Fetch lectures created by current user (speaker/master)
   const {
@@ -152,7 +149,8 @@ export default function MyClass() {
         speaker_id: profile.user_id,
         email: studentEmail,
         student_name: studentName,
-        license_number: studentLicense
+        license_number: studentLicense,
+        phone_number: studentPhone
       });
       if (error) throw error;
     },
@@ -164,6 +162,7 @@ export default function MyClass() {
       setStudentName('');
       setStudentEmail('');
       setStudentLicense('');
+      setStudentPhone('');
       toast.success('수강생이 등록되었습니다.');
     },
     onError: error => {
@@ -199,7 +198,8 @@ export default function MyClass() {
         .update({
           student_name: editStudentName,
           email: editStudentEmail,
-          license_number: editStudentLicense
+          license_number: editStudentLicense,
+          phone_number: editStudentPhone
         })
         .eq('id', editingStudent.id);
       if (error) throw error;
@@ -252,12 +252,26 @@ export default function MyClass() {
     }
   });
 
-  const handleEditStudent = (student: StudentEntry) => {
+  const handleEditStudent = (student: StudentData) => {
     setEditingStudent(student);
     setEditStudentName(student.student_name || '');
     setEditStudentEmail(student.email);
     setEditStudentLicense(student.license_number || '');
+    setEditStudentPhone(student.phone_number || '');
     setIsEditStudentDialogOpen(true);
+  };
+
+  const handleCheckboxChange = async (studentId: string, field: keyof StudentData, value: boolean) => {
+    const { error } = await supabase
+      .from('whitelist')
+      .update({ [field]: value })
+      .eq('id', studentId);
+    
+    if (error) {
+      toast.error('업데이트 실패: ' + error.message);
+    } else {
+      queryClient.invalidateQueries({ queryKey: ['lecture-students'] });
+    }
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -402,6 +416,10 @@ export default function MyClass() {
                           <Label htmlFor="studentLicense">면허번호</Label>
                           <Input id="studentLicense" value={studentLicense} onChange={e => setStudentLicense(e.target.value)} placeholder="12345" />
                         </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="studentPhone">연락처</Label>
+                          <Input id="studentPhone" value={studentPhone} onChange={e => setStudentPhone(e.target.value)} placeholder="010-1234-5678" />
+                        </div>
                       </div>
                       <DialogFooter>
                         <Button variant="outline" onClick={() => setIsAddStudentDialogOpen(false)}>
@@ -418,39 +436,12 @@ export default function MyClass() {
             </CardHeader>
             {isTableVisible && (
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-16">No</TableHead>
-                      <TableHead>수강생 이름</TableHead>
-                      <TableHead>면허번호</TableHead>
-                      <TableHead>로그인 이메일</TableHead>
-                      <TableHead className="w-24"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {students && students.length > 0 ? students.map((student, index) => <TableRow key={student.id}>
-                          <TableCell>{index + 1}</TableCell>
-                          <TableCell>{student.student_name || '-'}</TableCell>
-                          <TableCell>{student.license_number || '-'}</TableCell>
-                          <TableCell>{student.email}</TableCell>
-                          <TableCell>
-                            <div className="flex gap-1">
-                              <Button variant="ghost" size="icon" onClick={() => handleEditStudent(student)}>
-                                <Pencil className="w-4 h-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon" onClick={() => deleteStudentMutation.mutate(student.id)} className="text-destructive hover:text-destructive">
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>) : <TableRow>
-                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                          등록된 수강생이 없습니다.
-                        </TableCell>
-                      </TableRow>}
-                  </TableBody>
-                </Table>
+                <StudentTable
+                  students={(students || []) as StudentData[]}
+                  onEdit={handleEditStudent}
+                  onDelete={(studentId) => deleteStudentMutation.mutate(studentId)}
+                  onCheckboxChange={handleCheckboxChange}
+                />
               </CardContent>
             )}
           </Card>}
@@ -476,6 +467,10 @@ export default function MyClass() {
               <div className="space-y-2">
                 <Label htmlFor="editStudentLicense">면허번호</Label>
                 <Input id="editStudentLicense" value={editStudentLicense} onChange={e => setEditStudentLicense(e.target.value)} placeholder="12345" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editStudentPhone">연락처</Label>
+                <Input id="editStudentPhone" value={editStudentPhone} onChange={e => setEditStudentPhone(e.target.value)} placeholder="010-1234-5678" />
               </div>
             </div>
             <DialogFooter>

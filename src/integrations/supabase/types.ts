@@ -311,34 +311,52 @@ export type Database = {
       }
       whitelist: {
         Row: {
+          business_registration: boolean
+          certificate_sent: boolean
           created_at: string
           email: string
           id: string
+          invoice_issued: boolean
           is_registered: boolean
           lecture_id: string
           license_number: string | null
+          payment_confirmed: boolean
+          phone_number: string | null
           speaker_id: string
           student_name: string | null
+          survey_completed: boolean
         }
         Insert: {
+          business_registration?: boolean
+          certificate_sent?: boolean
           created_at?: string
           email: string
           id?: string
+          invoice_issued?: boolean
           is_registered?: boolean
           lecture_id: string
           license_number?: string | null
+          payment_confirmed?: boolean
+          phone_number?: string | null
           speaker_id: string
           student_name?: string | null
+          survey_completed?: boolean
         }
         Update: {
+          business_registration?: boolean
+          certificate_sent?: boolean
           created_at?: string
           email?: string
           id?: string
+          invoice_issued?: boolean
           is_registered?: boolean
           lecture_id?: string
           license_number?: string | null
+          payment_confirmed?: boolean
+          phone_number?: string | null
           speaker_id?: string
           student_name?: string | null
+          survey_completed?: boolean
         }
         Relationships: [
           {
