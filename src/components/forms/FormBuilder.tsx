@@ -10,16 +10,18 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { Plus, Trash2, GripVertical } from 'lucide-react';
+import { Plus, Trash2, GripVertical, AlignLeft } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
-export type QuestionType = 'multiple_choice' | 'short_answer' | 'long_answer';
+
+export type QuestionType = 'multiple_choice' | 'short_answer' | 'long_answer' | 'description';
 
 export interface FormQuestion {
   id: string;
   question_text: string;
   question_type: QuestionType;
   options?: string[];
+  has_other?: boolean;
   is_required: boolean;
   order_index: number;
 }
@@ -36,10 +38,24 @@ export function FormBuilder({ questions, onQuestionsChange }: FormBuilderProps) 
       question_text: '',
       question_type: 'short_answer',
       options: [],
+      has_other: false,
       is_required: true,
       order_index: questions.length,
     };
     onQuestionsChange([...questions, newQuestion]);
+  };
+
+  const addDescription = () => {
+    const newDescription: FormQuestion = {
+      id: crypto.randomUUID(),
+      question_text: '',
+      question_type: 'description',
+      options: [],
+      has_other: false,
+      is_required: false,
+      order_index: questions.length,
+    };
+    onQuestionsChange([...questions, newDescription]);
   };
 
   const updateQuestion = (id: string, updates: Partial<FormQuestion>) => {
@@ -64,6 +80,13 @@ export function FormBuilder({ questions, onQuestionsChange }: FormBuilderProps) 
     }
   };
 
+  const toggleOtherOption = (questionId: string) => {
+    const question = questions.find((q) => q.id === questionId);
+    if (question) {
+      updateQuestion(questionId, { has_other: !question.has_other });
+    }
+  };
+
   const updateOption = (questionId: string, optionIndex: number, value: string) => {
     const question = questions.find((q) => q.id === questionId);
     if (question && question.options) {
@@ -81,7 +104,6 @@ export function FormBuilder({ questions, onQuestionsChange }: FormBuilderProps) 
     }
   };
 
-
   return (
     <div className="space-y-4">
       <ScrollArea type="always" className="h-[320px] pr-4">
@@ -94,101 +116,167 @@ export function FormBuilder({ questions, onQuestionsChange }: FormBuilderProps) 
                     <GripVertical className="w-4 h-4" />
                   </div>
                   <div className="flex-1 space-y-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-muted-foreground">
-                        Q{index + 1}
-                      </span>
-                      <Input
-                        value={question.question_text}
-                        onChange={(e) =>
-                          updateQuestion(question.id, { question_text: e.target.value })
-                        }
-                        placeholder="질문을 입력하세요"
-                        className="flex-1"
-                      />
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                      <Select
-                        value={question.question_type}
-                        onValueChange={(value: QuestionType) =>
-                          updateQuestion(question.id, {
-                            question_type: value,
-                            options: value === 'multiple_choice' ? [''] : [],
-                          })
-                        }
-                      >
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="short_answer">단답형</SelectItem>
-                          <SelectItem value="long_answer">주관식</SelectItem>
-                          <SelectItem value="multiple_choice">객관식</SelectItem>
-                        </SelectContent>
-                      </Select>
-
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={question.is_required}
-                          onCheckedChange={(checked) =>
-                            updateQuestion(question.id, { is_required: checked })
+                    {question.question_type === 'description' ? (
+                      // Description type - just a text area for section description
+                      <>
+                        <div className="flex items-center gap-2">
+                          <AlignLeft className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm font-medium text-muted-foreground">
+                            설명
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => deleteQuestion(question.id)}
+                            className="text-destructive hover:text-destructive ml-auto"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <Textarea
+                          value={question.question_text}
+                          onChange={(e) =>
+                            updateQuestion(question.id, { question_text: e.target.value })
                           }
+                          placeholder="섹션 설명을 입력하세요"
+                          className="min-h-[80px]"
                         />
-                        <Label className="text-sm">필수</Label>
-                      </div>
+                      </>
+                    ) : (
+                      // Regular question types
+                      <>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-muted-foreground">
+                            Q{questions.filter(q => q.question_type !== 'description').findIndex(q => q.id === question.id) + 1}
+                          </span>
+                          <Input
+                            value={question.question_text}
+                            onChange={(e) =>
+                              updateQuestion(question.id, { question_text: e.target.value })
+                            }
+                            placeholder="질문을 입력하세요"
+                            className="flex-1"
+                          />
+                        </div>
 
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => deleteQuestion(question.id)}
-                        className="text-destructive hover:text-destructive ml-auto"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+                        <div className="flex items-center gap-4">
+                          <Select
+                            value={question.question_type}
+                            onValueChange={(value: QuestionType) =>
+                              updateQuestion(question.id, {
+                                question_type: value,
+                                options: value === 'multiple_choice' ? [''] : [],
+                                has_other: value === 'multiple_choice' ? question.has_other : false,
+                              })
+                            }
+                          >
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="short_answer">단답형</SelectItem>
+                              <SelectItem value="long_answer">주관식</SelectItem>
+                              <SelectItem value="multiple_choice">객관식</SelectItem>
+                            </SelectContent>
+                          </Select>
 
-                    {question.question_type === 'multiple_choice' && (
-                      <div className="space-y-2 pl-4 border-l-2 border-muted">
-                        {(question.options || []).map((option, optionIndex) => (
-                          <div key={optionIndex} className="flex items-center gap-2">
-                            <div className="w-4 h-4 rounded-full border-2 border-muted-foreground" />
-                            <Input
-                              value={option}
-                              onChange={(e) =>
-                                updateOption(question.id, optionIndex, e.target.value)
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              checked={question.is_required}
+                              onCheckedChange={(checked) =>
+                                updateQuestion(question.id, { is_required: checked })
                               }
-                              placeholder={`옵션 ${optionIndex + 1}`}
-                              className="flex-1"
                             />
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => deleteOption(question.id, optionIndex)}
-                              className="text-muted-foreground hover:text-destructive"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
+                            <Label className="text-sm">필수</Label>
                           </div>
-                        ))}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => addOption(question.id)}
-                          className="text-muted-foreground"
-                        >
-                          <Plus className="w-3 h-3 mr-1" />
-                          옵션 추가
-                        </Button>
-                      </div>
-                    )}
 
-                    {question.question_type === 'short_answer' && (
-                      <Input disabled placeholder="단답형 텍스트" className="bg-muted" />
-                    )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => deleteQuestion(question.id)}
+                            className="text-destructive hover:text-destructive ml-auto"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
 
-                    {question.question_type === 'long_answer' && (
-                      <Textarea disabled placeholder="주관식 텍스트" className="bg-muted" />
+                        {question.question_type === 'multiple_choice' && (
+                          <div className="space-y-2 pl-4 border-l-2 border-muted">
+                            {(question.options || []).map((option, optionIndex) => (
+                              <div key={optionIndex} className="flex items-center gap-2">
+                                <div className="w-4 h-4 rounded-full border-2 border-muted-foreground" />
+                                <Input
+                                  value={option}
+                                  onChange={(e) =>
+                                    updateOption(question.id, optionIndex, e.target.value)
+                                  }
+                                  placeholder={`옵션 ${optionIndex + 1}`}
+                                  className="flex-1"
+                                />
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => deleteOption(question.id, optionIndex)}
+                                  className="text-muted-foreground hover:text-destructive"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            ))}
+                            {question.has_other && (
+                              <div className="flex items-center gap-2">
+                                <div className="w-4 h-4 rounded-full border-2 border-muted-foreground" />
+                                <Input
+                                  value="기타..."
+                                  disabled
+                                  className="flex-1 bg-muted"
+                                />
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => toggleOtherOption(question.id)}
+                                  className="text-muted-foreground hover:text-destructive"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            )}
+                            <div className="flex gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => addOption(question.id)}
+                                className="text-muted-foreground"
+                              >
+                                <Plus className="w-3 h-3 mr-1" />
+                                옵션 추가
+                              </Button>
+                              {!question.has_other && (
+                                <>
+                                  <span className="text-muted-foreground text-sm leading-8">또는</span>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => toggleOtherOption(question.id)}
+                                    className="text-muted-foreground"
+                                  >
+                                    <Plus className="w-3 h-3 mr-1" />
+                                    '기타' 추가
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {question.question_type === 'short_answer' && (
+                          <Input disabled placeholder="단답형 텍스트" className="bg-muted" />
+                        )}
+
+                        {question.question_type === 'long_answer' && (
+                          <Textarea disabled placeholder="주관식 텍스트" className="bg-muted" />
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -198,10 +286,16 @@ export function FormBuilder({ questions, onQuestionsChange }: FormBuilderProps) 
         </div>
       </ScrollArea>
 
-      <Button variant="outline" onClick={addQuestion} className="w-full gap-2">
-        <Plus className="w-4 h-4" />
-        질문 추가
-      </Button>
+      <div className="flex gap-2">
+        <Button variant="outline" onClick={addQuestion} className="flex-1 gap-2">
+          <Plus className="w-4 h-4" />
+          질문 추가
+        </Button>
+        <Button variant="outline" onClick={addDescription} className="flex-1 gap-2">
+          <AlignLeft className="w-4 h-4" />
+          설명 추가
+        </Button>
+      </div>
     </div>
   );
 }

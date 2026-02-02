@@ -59,6 +59,7 @@ export type Database = {
         Row: {
           created_at: string
           form_id: string
+          has_other: boolean
           id: string
           is_required: boolean
           options: Json | null
@@ -69,6 +70,7 @@ export type Database = {
         Insert: {
           created_at?: string
           form_id: string
+          has_other?: boolean
           id?: string
           is_required?: boolean
           options?: Json | null
@@ -79,6 +81,7 @@ export type Database = {
         Update: {
           created_at?: string
           form_id?: string
+          has_other?: boolean
           id?: string
           is_required?: boolean
           options?: Json | null
@@ -366,7 +369,11 @@ export type Database = {
     }
     Enums: {
       app_role: "master" | "speaker" | "student"
-      question_type: "multiple_choice" | "short_answer" | "long_answer"
+      question_type:
+        | "multiple_choice"
+        | "short_answer"
+        | "long_answer"
+        | "description"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -495,7 +502,12 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["master", "speaker", "student"],
-      question_type: ["multiple_choice", "short_answer", "long_answer"],
+      question_type: [
+        "multiple_choice",
+        "short_answer",
+        "long_answer",
+        "description",
+      ],
     },
   },
 } as const
