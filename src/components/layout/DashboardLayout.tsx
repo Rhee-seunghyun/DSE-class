@@ -124,14 +124,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         "flex-1 overflow-auto grid-pattern transition-all duration-300",
         isExpanded ? "ml-56" : "ml-16"
       )}>
-        {/* Header with logo */}
-        <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-sm border-b border-border">
-          <div className="flex items-center justify-end px-8 py-4">
-            <img src={doableLogo} alt="DoABLE" className="h-8" />
-          </div>
-        </header>
+        {/* Logo positioned in top-right */}
+        <div className="absolute top-6 right-8 z-30">
+          <img src={doableLogo} alt="DoABLE" className="h-8" />
+        </div>
         
-        <div className="p-8">
+        <div className="p-8 pt-16">
           {children}
         </div>
       </main>
