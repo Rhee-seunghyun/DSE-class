@@ -27,7 +27,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     navigate('/login');
   };
 
-  // Navigation items based on the reference design
+  // Navigation items based on role
   const navItems = [
     { 
       href: '/my-class', 
@@ -37,7 +37,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     },
     { 
       href: '/speakers', 
-      label: 'Speaker', 
+      label: 'Speaker 관리', 
       icon: Mic,
       roles: ['master'] 
     },
