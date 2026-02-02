@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Pencil, ChevronDown, ChevronUp, Upload, FileText } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -24,7 +24,10 @@ export default function MyClass() {
   const queryClient = useQueryClient();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isAddStudentDialogOpen, setIsAddStudentDialogOpen] = useState(false);
+  const [isEditStudentDialogOpen, setIsEditStudentDialogOpen] = useState(false);
   const [selectedLectureId, setSelectedLectureId] = useState<string | null>(null);
+  const [isTableVisible, setIsTableVisible] = useState(true);
+  const [editingStudent, setEditingStudent] = useState<StudentEntry | null>(null);
 
   // Form states for creating class
   const [newClassTitle, setNewClassTitle] = useState('');
@@ -35,6 +38,11 @@ export default function MyClass() {
   const [studentName, setStudentName] = useState('');
   const [studentEmail, setStudentEmail] = useState('');
   const [studentLicense, setStudentLicense] = useState('');
+
+  // Edit student form states
+  const [editStudentName, setEditStudentName] = useState('');
+  const [editStudentEmail, setEditStudentEmail] = useState('');
+  const [editStudentLicense, setEditStudentLicense] = useState('');
 
   // Fetch lectures created by current user (speaker/master)
   const {
@@ -162,6 +170,84 @@ export default function MyClass() {
       toast.error('삭제 실패: ' + error.message);
     }
   });
+
+  // Update student mutation
+  const updateStudentMutation = useMutation({
+    mutationFn: async () => {
+      if (!editingStudent) throw new Error('수정할 수강생을 선택해주세요.');
+      const { error } = await supabase
+        .from('whitelist')
+        .update({
+          student_name: editStudentName,
+          email: editStudentEmail,
+          license_number: editStudentLicense
+        })
+        .eq('id', editingStudent.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['lecture-students']
+      });
+      setIsEditStudentDialogOpen(false);
+      setEditingStudent(null);
+      toast.success('수강생 정보가 수정되었습니다.');
+    },
+    onError: error => {
+      toast.error('수정 실패: ' + error.message);
+    }
+  });
+
+  // Upload lecture file mutation
+  const uploadFileMutation = useMutation({
+    mutationFn: async (file: File) => {
+      if (!selectedLectureId || !profile?.user_id) throw new Error('강의를 선택해주세요.');
+      
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${profile.user_id}/${selectedLectureId}/${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('lecture-files')
+        .upload(filePath, file);
+      
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('lecture-files')
+        .getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase
+        .from('lectures')
+        .update({ pdf_url: publicUrl })
+        .eq('id', selectedLectureId);
+
+      if (updateError) throw updateError;
+      return publicUrl;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-classes'] });
+      toast.success('강의자료가 업로드되었습니다.');
+    },
+    onError: error => {
+      toast.error('업로드 실패: ' + error.message);
+    }
+  });
+
+  const handleEditStudent = (student: StudentEntry) => {
+    setEditingStudent(student);
+    setEditStudentName(student.student_name || '');
+    setEditStudentEmail(student.email);
+    setEditStudentLicense(student.license_number || '');
+    setIsEditStudentDialogOpen(true);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      uploadFileMutation.mutate(file);
+    }
+  };
+
   const selectedLecture = lectures?.find(l => l.id === selectedLectureId);
   return <DashboardLayout>
       <div className="space-y-6 animate-fade-in">
@@ -221,80 +307,150 @@ export default function MyClass() {
         {selectedLecture && <Card className="bg-card">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <div className="px-4 py-2 rounded-md font-medium bg-[#f2f2f2] text-secondary-foreground">
+                <Button
+                  variant="secondary"
+                  className="gap-2 font-medium"
+                  onClick={() => setIsTableVisible(!isTableVisible)}
+                >
                   {selectedLecture.description?.split('/')[0]?.trim() || '날짜 미정'} {selectedLecture.title}
-                </div>
-                <Dialog open={isAddStudentDialogOpen} onOpenChange={setIsAddStudentDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button size="sm" variant="outline" className="gap-1">
-                      <Plus className="w-4 h-4" />
-                      수강생 추가
+                  {isTableVisible ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </Button>
+                <div className="flex gap-2">
+                  <label>
+                    <input
+                      type="file"
+                      accept=".pdf,.ppt,.pptx,.doc,.docx"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                    <Button size="sm" variant="outline" className="gap-1" asChild disabled={uploadFileMutation.isPending}>
+                      <span>
+                        <Upload className="w-4 h-4" />
+                        {uploadFileMutation.isPending ? '업로드 중...' : '강의자료'}
+                      </span>
                     </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>수강생 등록</DialogTitle>
-                      <DialogDescription>
-                        이 강의에 접근할 수 있는 수강생을 등록합니다.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="studentName">수강생 이름</Label>
-                        <Input id="studentName" value={studentName} onChange={e => setStudentName(e.target.value)} placeholder="홍길동" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="studentEmail">이메일 주소</Label>
-                        <Input id="studentEmail" type="email" value={studentEmail} onChange={e => setStudentEmail(e.target.value)} placeholder="student@example.com" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="studentLicense">면허번호</Label>
-                        <Input id="studentLicense" value={studentLicense} onChange={e => setStudentLicense(e.target.value)} placeholder="12345" />
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setIsAddStudentDialogOpen(false)}>
-                        취소
+                  </label>
+                  {selectedLecture.pdf_url && (
+                    <Button size="sm" variant="ghost" className="gap-1" asChild>
+                      <a href={selectedLecture.pdf_url} target="_blank" rel="noopener noreferrer">
+                        <FileText className="w-4 h-4" />
+                        보기
+                      </a>
+                    </Button>
+                  )}
+                  <Dialog open={isAddStudentDialogOpen} onOpenChange={setIsAddStudentDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm" variant="outline" className="gap-1">
+                        <Plus className="w-4 h-4" />
+                        수강생 추가
                       </Button>
-                      <Button onClick={() => addStudentMutation.mutate()} disabled={!studentEmail || addStudentMutation.isPending}>
-                        {addStudentMutation.isPending ? '등록 중...' : '등록하기'}
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>수강생 등록</DialogTitle>
+                        <DialogDescription>
+                          이 강의에 접근할 수 있는 수강생을 등록합니다.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="studentName">수강생 이름</Label>
+                          <Input id="studentName" value={studentName} onChange={e => setStudentName(e.target.value)} placeholder="홍길동" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="studentEmail">이메일 주소</Label>
+                          <Input id="studentEmail" type="email" value={studentEmail} onChange={e => setStudentEmail(e.target.value)} placeholder="student@example.com" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="studentLicense">면허번호</Label>
+                          <Input id="studentLicense" value={studentLicense} onChange={e => setStudentLicense(e.target.value)} placeholder="12345" />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsAddStudentDialogOpen(false)}>
+                          취소
+                        </Button>
+                        <Button onClick={() => addStudentMutation.mutate()} disabled={!studentEmail || addStudentMutation.isPending}>
+                          {addStudentMutation.isPending ? '등록 중...' : '등록하기'}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </div>
             </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-16">No</TableHead>
-                    <TableHead>수강생 이름</TableHead>
-                    <TableHead>면허번호</TableHead>
-                    <TableHead>로그인 이메일</TableHead>
-                    <TableHead className="w-16"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {students && students.length > 0 ? students.map((student, index) => <TableRow key={student.id}>
-                        <TableCell>{index + 1}</TableCell>
-                        <TableCell>{student.student_name || '-'}</TableCell>
-                        <TableCell>{student.license_number || '-'}</TableCell>
-                        <TableCell>{student.email}</TableCell>
-                        <TableCell>
-                          <Button variant="ghost" size="icon" onClick={() => deleteStudentMutation.mutate(student.id)} className="text-destructive hover:text-destructive">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+            {isTableVisible && (
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-16">No</TableHead>
+                      <TableHead>수강생 이름</TableHead>
+                      <TableHead>면허번호</TableHead>
+                      <TableHead>로그인 이메일</TableHead>
+                      <TableHead className="w-24"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {students && students.length > 0 ? students.map((student, index) => <TableRow key={student.id}>
+                          <TableCell>{index + 1}</TableCell>
+                          <TableCell>{student.student_name || '-'}</TableCell>
+                          <TableCell>{student.license_number || '-'}</TableCell>
+                          <TableCell>{student.email}</TableCell>
+                          <TableCell>
+                            <div className="flex gap-1">
+                              <Button variant="ghost" size="icon" onClick={() => handleEditStudent(student)}>
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" onClick={() => deleteStudentMutation.mutate(student.id)} className="text-destructive hover:text-destructive">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>) : <TableRow>
+                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                          등록된 수강생이 없습니다.
                         </TableCell>
-                      </TableRow>) : <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                        등록된 수강생이 없습니다.
-                      </TableCell>
-                    </TableRow>}
-                </TableBody>
-              </Table>
-            </CardContent>
+                      </TableRow>}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            )}
           </Card>}
+
+        {/* Edit Student Dialog */}
+        <Dialog open={isEditStudentDialogOpen} onOpenChange={setIsEditStudentDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>수강생 정보 수정</DialogTitle>
+              <DialogDescription>
+                수강생의 정보를 수정합니다.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="editStudentName">수강생 이름</Label>
+                <Input id="editStudentName" value={editStudentName} onChange={e => setEditStudentName(e.target.value)} placeholder="홍길동" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editStudentEmail">이메일 주소</Label>
+                <Input id="editStudentEmail" type="email" value={editStudentEmail} onChange={e => setEditStudentEmail(e.target.value)} placeholder="student@example.com" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editStudentLicense">면허번호</Label>
+                <Input id="editStudentLicense" value={editStudentLicense} onChange={e => setEditStudentLicense(e.target.value)} placeholder="12345" />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditStudentDialogOpen(false)}>
+                취소
+              </Button>
+              <Button onClick={() => updateStudentMutation.mutate()} disabled={!editStudentEmail || updateStudentMutation.isPending}>
+                {updateStudentMutation.isPending ? '저장 중...' : '저장하기'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>;
 }
