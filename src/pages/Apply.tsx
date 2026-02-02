@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Loader2, CheckCircle } from 'lucide-react';
-import { Logo } from '@/components/Logo';
+
 
 interface FormQuestion {
   id: string;
@@ -208,10 +208,6 @@ export default function Apply() {
   return (
     <div className="min-h-screen bg-background py-8 px-4">
       <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <Logo className="h-10 mx-auto mb-4" />
-        </div>
 
         {/* Form Card */}
         <Card className="mb-6">
