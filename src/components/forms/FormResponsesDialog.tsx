@@ -5,9 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Check, X, Eye } from 'lucide-react';
+import { Check, X, Eye, Download } from 'lucide-react';
 import { useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import * as XLSX from 'xlsx';
 
 interface FormResponsesDialogProps {
   open: boolean;
@@ -142,15 +143,87 @@ export function FormResponsesDialog({
     }
   };
 
+  const handleExportExcel = () => {
+    if (!responses || responses.length === 0) {
+      toast.error('다운로드할 데이터가 없습니다.');
+      return;
+    }
+
+    // Filter out description type questions
+    const actualQuestions = questions?.filter(q => q.question_type !== 'description') || [];
+
+    // Build Excel data
+    const excelData = responses.map((response, index) => {
+      const row: Record<string, string | number> = {
+        'No': index + 1,
+        '이름': response.applicant_name,
+        '이메일': response.applicant_email,
+        '면허번호': response.license_number || '-',
+        '신청일': new Date(response.created_at).toLocaleDateString('ko-KR'),
+        '상태': response.status === 'approved' ? '승인됨' : response.status === 'rejected' ? '거절됨' : '대기중',
+      };
+
+      // Add answers for each question
+      actualQuestions.forEach((question) => {
+        const answer = response.answers[question.id];
+        if (typeof answer === 'object' && answer !== null) {
+          // Handle "기타" option answers
+          const answerObj = answer as { selected?: string; otherText?: string };
+          if (answerObj.otherText) {
+            row[question.question_text] = `${answerObj.selected} - ${answerObj.otherText}`;
+          } else {
+            row[question.question_text] = answerObj.selected || '-';
+          }
+        } else {
+          row[question.question_text] = answer || '-';
+        }
+      });
+
+      return row;
+    });
+
+    // Create workbook and worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(excelData);
+
+    // Set column widths
+    const colWidths = Object.keys(excelData[0] || {}).map((key) => ({
+      wch: Math.max(key.length, 15),
+    }));
+    ws['!cols'] = colWidths;
+
+    XLSX.utils.book_append_sheet(wb, ws, '신청목록');
+
+    // Download
+    const fileName = `${formTitle}_신청목록_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+    toast.success('엑셀 파일이 다운로드되었습니다.');
+  };
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-3xl max-h-[80vh]">
           <DialogHeader>
-            <DialogTitle>{formTitle} - 신청 목록</DialogTitle>
-            <DialogDescription>
-              수강 신청서를 확인하고 승인/거절할 수 있습니다.
-            </DialogDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle>{formTitle} - 신청 목록</DialogTitle>
+                <DialogDescription>
+                  수강 신청서를 확인하고 승인/거절할 수 있습니다.
+                </DialogDescription>
+              </div>
+              {responses && responses.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportExcel}
+                  className="gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  엑셀 다운로드
+                </Button>
+              )}
+            </div>
           </DialogHeader>
 
           <ScrollArea className="max-h-[60vh]">
@@ -249,12 +322,26 @@ export function FormResponsesDialog({
               </div>
               {questions && Object.entries(selectedResponse.answers).map(([questionId, answer]) => {
                 const question = questions.find((q) => q.id === questionId);
+                if (!question || question.question_type === 'description') return null;
+                
+                let displayAnswer = '-';
+                if (typeof answer === 'object' && answer !== null) {
+                  const answerObj = answer as { selected?: string; otherText?: string };
+                  if (answerObj.otherText) {
+                    displayAnswer = `${answerObj.selected} - ${answerObj.otherText}`;
+                  } else {
+                    displayAnswer = answerObj.selected || '-';
+                  }
+                } else {
+                  displayAnswer = answer || '-';
+                }
+                
                 return (
                   <div key={questionId}>
                     <span className="text-sm text-muted-foreground">
                       {question?.question_text || '질문'}:
                     </span>
-                    <p className="font-medium">{answer || '-'}</p>
+                    <p className="font-medium">{displayAnswer}</p>
                   </div>
                 );
               })}
