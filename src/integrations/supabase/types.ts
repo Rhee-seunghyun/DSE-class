@@ -315,6 +315,7 @@ export type Database = {
           certificate_sent: boolean
           created_at: string
           email: string
+          form_response_id: string | null
           id: string
           invoice_issued: boolean
           is_new_student: boolean
@@ -332,6 +333,7 @@ export type Database = {
           certificate_sent?: boolean
           created_at?: string
           email: string
+          form_response_id?: string | null
           id?: string
           invoice_issued?: boolean
           is_new_student?: boolean
@@ -349,6 +351,7 @@ export type Database = {
           certificate_sent?: boolean
           created_at?: string
           email?: string
+          form_response_id?: string | null
           id?: string
           invoice_issued?: boolean
           is_new_student?: boolean
@@ -362,6 +365,13 @@ export type Database = {
           survey_completed?: boolean
         }
         Relationships: [
+          {
+            foreignKeyName: "whitelist_form_response_id_fkey"
+            columns: ["form_response_id"]
+            isOneToOne: false
+            referencedRelation: "form_responses"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "whitelist_lecture_id_fkey"
             columns: ["lecture_id"]

@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Check, X, Eye, Download } from 'lucide-react';
+import { Check, X, Eye, Download, RefreshCw, CheckCheck } from 'lucide-react';
 import { useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import * as XLSX from 'xlsx';
@@ -70,6 +70,22 @@ export function FormResponsesDialog({
     enabled: open && !!formId,
   });
 
+  // Fetch existing whitelist entries to check which responses are already synced
+  const { data: whitelistEntries } = useQuery({
+    queryKey: ['whitelist-by-form-response', lectureId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('whitelist')
+        .select('form_response_id')
+        .eq('lecture_id', lectureId)
+        .not('form_response_id', 'is', null);
+
+      if (error) throw error;
+      return new Set((data || []).map(w => w.form_response_id));
+    },
+    enabled: open && !!lectureId,
+  });
+
   const approveResponseMutation = useMutation({
     mutationFn: async (response: FormResponse) => {
       // Update response status
@@ -83,7 +99,7 @@ export function FormResponsesDialog({
 
       if (updateError) throw updateError;
 
-      // Add to whitelist
+      // Add to whitelist with form_response_id to prevent duplicates
       const { error: whitelistError } = await supabase
         .from('whitelist')
         .insert({
@@ -92,11 +108,12 @@ export function FormResponsesDialog({
           email: response.applicant_email,
           student_name: response.applicant_name,
           license_number: response.license_number,
+          form_response_id: response.id,
         });
 
       if (whitelistError) {
-        // If already exists, that's okay
-        if (!whitelistError.message.includes('duplicate')) {
+        // If duplicate form_response_id, that's okay
+        if (!whitelistError.message.includes('duplicate') && !whitelistError.message.includes('unique')) {
           throw whitelistError;
         }
       }
@@ -104,10 +121,101 @@ export function FormResponsesDialog({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['form-responses'] });
       queryClient.invalidateQueries({ queryKey: ['lecture-students'] });
+      queryClient.invalidateQueries({ queryKey: ['whitelist-by-form-response'] });
       toast.success('신청이 승인되었습니다. 수강생 목록에 추가되었습니다.');
     },
     onError: (error) => {
       toast.error('승인 실패: ' + error.message);
+    },
+  });
+
+  // Bulk approve all pending responses
+  const bulkApproveMutation = useMutation({
+    mutationFn: async () => {
+      const pendingResponses = responses?.filter(r => r.status === 'pending') || [];
+      if (pendingResponses.length === 0) {
+        throw new Error('승인할 대기 중인 신청이 없습니다.');
+      }
+
+      for (const response of pendingResponses) {
+        // Update response status
+        const { error: updateError } = await supabase
+          .from('form_responses')
+          .update({
+            status: 'approved',
+            reviewed_at: new Date().toISOString(),
+          })
+          .eq('id', response.id);
+
+        if (updateError) throw updateError;
+
+        // Add to whitelist
+        const { error: whitelistError } = await supabase
+          .from('whitelist')
+          .insert({
+            lecture_id: lectureId,
+            speaker_id: speakerId,
+            email: response.applicant_email,
+            student_name: response.applicant_name,
+            license_number: response.license_number,
+            form_response_id: response.id,
+          });
+
+        if (whitelistError && !whitelistError.message.includes('duplicate') && !whitelistError.message.includes('unique')) {
+          console.error('Whitelist insert error:', whitelistError);
+        }
+      }
+
+      return pendingResponses.length;
+    },
+    onSuccess: (count) => {
+      queryClient.invalidateQueries({ queryKey: ['form-responses'] });
+      queryClient.invalidateQueries({ queryKey: ['lecture-students'] });
+      queryClient.invalidateQueries({ queryKey: ['whitelist-by-form-response'] });
+      toast.success(`${count}명의 신청이 승인되었습니다.`);
+    },
+    onError: (error) => {
+      toast.error('일괄 승인 실패: ' + error.message);
+    },
+  });
+
+  // Sync approved responses that are missing from whitelist
+  const syncMissingMutation = useMutation({
+    mutationFn: async () => {
+      const approvedResponses = responses?.filter(r => r.status === 'approved') || [];
+      const existingIds = whitelistEntries || new Set();
+      const missingResponses = approvedResponses.filter(r => !existingIds.has(r.id));
+
+      if (missingResponses.length === 0) {
+        throw new Error('동기화할 누락된 수강생이 없습니다.');
+      }
+
+      for (const response of missingResponses) {
+        const { error: whitelistError } = await supabase
+          .from('whitelist')
+          .insert({
+            lecture_id: lectureId,
+            speaker_id: speakerId,
+            email: response.applicant_email,
+            student_name: response.applicant_name,
+            license_number: response.license_number,
+            form_response_id: response.id,
+          });
+
+        if (whitelistError && !whitelistError.message.includes('duplicate') && !whitelistError.message.includes('unique')) {
+          console.error('Whitelist insert error:', whitelistError);
+        }
+      }
+
+      return missingResponses.length;
+    },
+    onSuccess: (count) => {
+      queryClient.invalidateQueries({ queryKey: ['lecture-students'] });
+      queryClient.invalidateQueries({ queryKey: ['whitelist-by-form-response'] });
+      toast.success(`${count}명의 누락된 수강생이 동기화되었습니다.`);
+    },
+    onError: (error) => {
+      toast.error('동기화 실패: ' + error.message);
     },
   });
 
@@ -200,10 +308,16 @@ export function FormResponsesDialog({
     toast.success('엑셀 파일이 다운로드되었습니다.');
   };
 
+  // Calculate counts
+  const pendingCount = responses?.filter(r => r.status === 'pending').length || 0;
+  const approvedCount = responses?.filter(r => r.status === 'approved').length || 0;
+  const existingIdsCount = whitelistEntries?.size || 0;
+  const missingCount = approvedCount - existingIdsCount;
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-3xl max-h-[80vh]">
+        <DialogContent className="max-w-4xl max-h-[80vh]">
           <DialogHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -212,17 +326,43 @@ export function FormResponsesDialog({
                   수강 신청서를 확인하고 승인/거절할 수 있습니다.
                 </DialogDescription>
               </div>
-              {responses && responses.length > 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleExportExcel}
-                  className="gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  엑셀 다운로드
-                </Button>
-              )}
+              <div className="flex gap-2">
+                {missingCount > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => syncMissingMutation.mutate()}
+                    disabled={syncMissingMutation.isPending}
+                    className="gap-2"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${syncMissingMutation.isPending ? 'animate-spin' : ''}`} />
+                    누락 동기화 ({missingCount}명)
+                  </Button>
+                )}
+                {pendingCount > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => bulkApproveMutation.mutate()}
+                    disabled={bulkApproveMutation.isPending}
+                    className="gap-2"
+                  >
+                    <CheckCheck className="w-4 h-4" />
+                    전체 승인 ({pendingCount}명)
+                  </Button>
+                )}
+                {responses && responses.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleExportExcel}
+                    className="gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    엑셀
+                  </Button>
+                )}
+              </div>
             </div>
           </DialogHeader>
 
