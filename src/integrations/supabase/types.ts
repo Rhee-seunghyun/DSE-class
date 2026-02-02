@@ -317,6 +317,7 @@ export type Database = {
           email: string
           id: string
           invoice_issued: boolean
+          is_new_student: boolean
           is_registered: boolean
           lecture_id: string
           license_number: string | null
@@ -333,6 +334,7 @@ export type Database = {
           email: string
           id?: string
           invoice_issued?: boolean
+          is_new_student?: boolean
           is_registered?: boolean
           lecture_id: string
           license_number?: string | null
@@ -349,6 +351,7 @@ export type Database = {
           email?: string
           id?: string
           invoice_issued?: boolean
+          is_new_student?: boolean
           is_registered?: boolean
           lecture_id?: string
           license_number?: string | null
