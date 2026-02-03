@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -13,7 +13,8 @@ import {
   Trash2,
   X,
   Mail,
-  Phone
+  Phone,
+  GripVertical
 } from 'lucide-react';
 import {
   Popover,
@@ -49,10 +50,31 @@ interface ColumnFilter {
   [key: string]: string;
 }
 
+interface ColumnWidths {
+  [key: string]: number;
+}
+
+const DEFAULT_COLUMN_WIDTHS: ColumnWidths = {
+  no: 48,
+  isNew: 48,
+  student_name: 80,
+  license_number: 80,
+  email: 140,
+  phone_number: 120,
+  payment_confirmed: 64,
+  business_registration: 64,
+  invoice_issued: 64,
+  survey_completed: 64,
+  certificate_sent: 64,
+  actions: 80,
+};
+
 export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: StudentTableProps) {
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
   const [filters, setFilters] = useState<ColumnFilter>({});
+  const [columnWidths, setColumnWidths] = useState<ColumnWidths>(DEFAULT_COLUMN_WIDTHS);
+  const resizingRef = useRef<{ column: string; startX: number; startWidth: number } | null>(null);
   const [activeFilterColumn, setActiveFilterColumn] = useState<string | null>(null);
 
   const handleSort = (field: keyof StudentData) => {
@@ -83,6 +105,34 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: S
       return newFilters;
     });
   };
+
+  const handleResizeStart = useCallback((column: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    resizingRef.current = {
+      column,
+      startX: e.clientX,
+      startWidth: columnWidths[column] || 80,
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!resizingRef.current) return;
+      const diff = e.clientX - resizingRef.current.startX;
+      const newWidth = Math.max(40, resizingRef.current.startWidth + diff);
+      setColumnWidths(prev => ({
+        ...prev,
+        [resizingRef.current!.column]: newWidth,
+      }));
+    };
+
+    const handleMouseUp = () => {
+      resizingRef.current = null;
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [columnWidths]);
 
   const filteredAndSortedStudents = useMemo(() => {
     let result = [...students];
@@ -132,13 +182,24 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: S
       <ArrowDown className="w-3 h-3" />;
   };
 
+  const ResizeHandle = ({ column }: { column: string }) => (
+    <div
+      className="absolute right-0 top-0 h-full w-1 cursor-col-resize group flex items-center justify-center hover:bg-primary/30"
+      onMouseDown={(e) => handleResizeStart(column, e)}
+    >
+      <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+        <GripVertical className="w-3 h-3 text-muted-foreground" />
+      </div>
+    </div>
+  );
+
   const renderColumnHeader = (field: keyof StudentData, label: React.ReactNode, sortable = true, filterable = true) => {
     const hasFilter = !!filters[field];
     
     return (
-      <div className="flex items-center gap-1">
-        <span className="text-xs">{label}</span>
-        <div className="flex items-center">
+      <div className="flex items-center gap-1 pr-2">
+        <span className="text-xs truncate">{label}</span>
+        <div className="flex items-center shrink-0">
           {sortable && (
             <Button
               variant="ghost"
@@ -183,22 +244,24 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: S
             </Popover>
           )}
         </div>
+        <ResizeHandle column={field} />
       </div>
     );
   };
 
   const renderCheckboxHeader = (field: keyof StudentData, label: string) => {
     return (
-      <div className="flex items-center gap-1">
-        <span className="text-xs">{label}</span>
+      <div className="flex items-center gap-1 pr-2">
+        <span className="text-xs truncate">{label}</span>
         <Button
           variant="ghost"
           size="icon"
-          className="h-6 w-6"
+          className="h-6 w-6 shrink-0"
           onClick={() => handleSort(field)}
         >
           {getSortIcon(field)}
         </Button>
+        <ResizeHandle column={field} />
       </div>
     );
   };
@@ -209,53 +272,65 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: S
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-12 text-xs">No.</TableHead>
-              <TableHead className="w-12 text-xs text-center">신규/재</TableHead>
-              <TableHead className="min-w-[80px]">
+              <TableHead style={{ width: columnWidths.no }} className="text-xs relative">
+                <div className="flex items-center pr-2">
+                  No.
+                  <ResizeHandle column="no" />
+                </div>
+              </TableHead>
+              <TableHead style={{ width: columnWidths.isNew }} className="text-xs text-center relative">
+                <div className="flex items-center justify-center pr-2">
+                  신규/재
+                  <ResizeHandle column="isNew" />
+                </div>
+              </TableHead>
+              <TableHead style={{ width: columnWidths.student_name }} className="relative">
                 {renderColumnHeader('student_name', '이름')}
               </TableHead>
-              <TableHead className="min-w-[80px]">
+              <TableHead style={{ width: columnWidths.license_number }} className="relative">
                 {renderColumnHeader('license_number', '면허')}
               </TableHead>
-              <TableHead className="min-w-[120px]">
+              <TableHead style={{ width: columnWidths.email }} className="relative">
                 {renderColumnHeader('email', <Mail className="w-4 h-4" />)}
               </TableHead>
-              <TableHead className="min-w-[100px]">
+              <TableHead style={{ width: columnWidths.phone_number }} className="relative">
                 {renderColumnHeader('phone_number', <Phone className="w-4 h-4" />)}
               </TableHead>
-              <TableHead className="w-16 text-center">
+              <TableHead style={{ width: columnWidths.payment_confirmed }} className="text-center relative">
                 {renderCheckboxHeader('payment_confirmed', '입금')}
               </TableHead>
-              <TableHead className="w-16 text-center">
+              <TableHead style={{ width: columnWidths.business_registration }} className="text-center relative">
                 {renderCheckboxHeader('business_registration', '사업자')}
               </TableHead>
-              <TableHead className="w-16 text-center">
+              <TableHead style={{ width: columnWidths.invoice_issued }} className="text-center relative">
                 {renderCheckboxHeader('invoice_issued', '계산서')}
               </TableHead>
-              <TableHead className="w-16 text-center">
+              <TableHead style={{ width: columnWidths.survey_completed }} className="text-center relative">
                 {renderCheckboxHeader('survey_completed', '설문')}
               </TableHead>
-              <TableHead className="w-16 text-center">
+              <TableHead style={{ width: columnWidths.certificate_sent }} className="text-center relative">
                 {renderCheckboxHeader('certificate_sent', 'Certi')}
               </TableHead>
-              <TableHead className="w-20"></TableHead>
+              <TableHead style={{ width: columnWidths.actions }} className="relative">
+                <ResizeHandle column="actions" />
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredAndSortedStudents.length > 0 ? (
               filteredAndSortedStudents.map((student, index) => (
                 <TableRow key={student.id}>
-                  <TableCell className="text-xs">{index + 1}</TableCell>
-                  <TableCell className="text-xs text-center font-medium">
+                  <TableCell style={{ width: columnWidths.no }} className="text-xs">{index + 1}</TableCell>
+                  <TableCell style={{ width: columnWidths.isNew }} className="text-xs text-center font-medium">
                     <span className={student.is_new_student !== false ? 'text-primary' : 'text-muted-foreground'}>
                       {student.is_new_student !== false ? '신' : '재'}
                     </span>
                   </TableCell>
-                  <TableCell className="text-sm">{student.student_name || '-'}</TableCell>
-                  <TableCell className="text-sm">{student.license_number || '-'}</TableCell>
-                  <TableCell className="text-sm">{student.email || '-'}</TableCell>
-                  <TableCell className="text-sm">{student.phone_number || '-'}</TableCell>
-                  <TableCell className="text-center">
+                  <TableCell style={{ width: columnWidths.student_name }} className="text-sm truncate">{student.student_name || '-'}</TableCell>
+                  <TableCell style={{ width: columnWidths.license_number }} className="text-sm truncate">{student.license_number || '-'}</TableCell>
+                  <TableCell style={{ width: columnWidths.email }} className="text-sm truncate">{student.email || '-'}</TableCell>
+                  <TableCell style={{ width: columnWidths.phone_number }} className="text-sm truncate">{student.phone_number || '-'}</TableCell>
+                  <TableCell style={{ width: columnWidths.payment_confirmed }} className="text-center">
                     <Checkbox
                       checked={student.payment_confirmed}
                       onCheckedChange={(checked) => 
@@ -263,7 +338,7 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: S
                       }
                     />
                   </TableCell>
-                  <TableCell className="text-center">
+                  <TableCell style={{ width: columnWidths.business_registration }} className="text-center">
                     <Checkbox
                       checked={student.business_registration}
                       onCheckedChange={(checked) => 
@@ -271,7 +346,7 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: S
                       }
                     />
                   </TableCell>
-                  <TableCell className="text-center">
+                  <TableCell style={{ width: columnWidths.invoice_issued }} className="text-center">
                     <Checkbox
                       checked={student.invoice_issued}
                       onCheckedChange={(checked) => 
@@ -279,7 +354,7 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: S
                       }
                     />
                   </TableCell>
-                  <TableCell className="text-center">
+                  <TableCell style={{ width: columnWidths.survey_completed }} className="text-center">
                     <Checkbox
                       checked={student.survey_completed}
                       onCheckedChange={(checked) => 
@@ -287,7 +362,7 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: S
                       }
                     />
                   </TableCell>
-                  <TableCell className="text-center">
+                  <TableCell style={{ width: columnWidths.certificate_sent }} className="text-center">
                     <Checkbox
                       checked={student.certificate_sent}
                       onCheckedChange={(checked) => 
@@ -295,7 +370,7 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: S
                       }
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell style={{ width: columnWidths.actions }}>
                     <div className="flex gap-1">
                       <Button 
                         variant="ghost" 
