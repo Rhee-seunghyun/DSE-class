@@ -55,7 +55,6 @@ interface ColumnWidths {
 }
 
 const DEFAULT_COLUMN_WIDTHS: ColumnWidths = {
-  no: 48,
   isNew: 48,
   student_name: 80,
   license_number: 80,
@@ -272,15 +271,9 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: S
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead style={{ width: columnWidths.no }} className="text-xs relative">
-                <div className="flex items-center pr-2">
-                  No.
-                  <ResizeHandle column="no" />
-                </div>
-              </TableHead>
               <TableHead style={{ width: columnWidths.isNew }} className="text-xs text-center relative">
                 <div className="flex items-center justify-center pr-2">
-                  신규/재
+                  신/재
                   <ResizeHandle column="isNew" />
                 </div>
               </TableHead>
@@ -320,7 +313,6 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: S
             {filteredAndSortedStudents.length > 0 ? (
               filteredAndSortedStudents.map((student, index) => (
                 <TableRow key={student.id}>
-                  <TableCell style={{ width: columnWidths.no }} className="text-xs">{index + 1}</TableCell>
                   <TableCell style={{ width: columnWidths.isNew }} className="text-xs text-center font-medium">
                     <span className={student.is_new_student !== false ? 'text-primary' : 'text-muted-foreground'}>
                       {student.is_new_student !== false ? '신' : '재'}
@@ -394,7 +386,7 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: S
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={12} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
                   등록된 수강생이 없습니다.
                 </TableCell>
               </TableRow>

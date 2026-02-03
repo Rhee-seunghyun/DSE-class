@@ -356,7 +356,7 @@ export default function MyClass() {
                     onClick={() => setIsApplicationFormDialogOpen(true)}
                   >
                     <ClipboardList className="w-4 h-4" />
-                    {applicationForm ? '세미나 신청서 수정' : '세미나 신청서 작성'}
+                    세미나 신청서
                   </Button>
                   <Button 
                     size="sm" 
