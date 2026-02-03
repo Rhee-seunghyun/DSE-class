@@ -389,48 +389,6 @@ export default function MyClass() {
                       </a>
                     </Button>
                   )}
-                  <Dialog open={isAddStudentDialogOpen} onOpenChange={setIsAddStudentDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button size="sm" variant="outline" className="gap-1">
-                        <Plus className="w-4 h-4" />
-                        수강생 추가
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>수강생 등록</DialogTitle>
-                        <DialogDescription>
-                          이 강의에 접근할 수 있는 수강생을 등록합니다.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="studentName">수강생 이름</Label>
-                          <Input id="studentName" value={studentName} onChange={e => setStudentName(e.target.value)} placeholder="홍길동" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="studentEmail">이메일 주소</Label>
-                          <Input id="studentEmail" type="email" value={studentEmail} onChange={e => setStudentEmail(e.target.value)} placeholder="student@example.com" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="studentLicense">면허번호</Label>
-                          <Input id="studentLicense" value={studentLicense} onChange={e => setStudentLicense(e.target.value)} placeholder="12345" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="studentPhone">연락처</Label>
-                          <Input id="studentPhone" value={studentPhone} onChange={e => setStudentPhone(e.target.value)} placeholder="010-1234-5678" />
-                        </div>
-                      </div>
-                      <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsAddStudentDialogOpen(false)}>
-                          취소
-                        </Button>
-                        <Button onClick={() => addStudentMutation.mutate()} disabled={!studentEmail || addStudentMutation.isPending}>
-                          {addStudentMutation.isPending ? '등록 중...' : '등록하기'}
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
                 </div>
               </div>
             </CardHeader>
