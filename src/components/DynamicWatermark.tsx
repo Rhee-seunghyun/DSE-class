@@ -18,7 +18,7 @@ export function DynamicWatermark({ className = '' }: DynamicWatermarkProps) {
 
   return (
     <div className={`watermark ${className}`}>
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-50 select-none">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
         <div 
           className="absolute inset-0 flex items-center justify-center"
           style={{
