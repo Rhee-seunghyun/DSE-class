@@ -20,7 +20,6 @@ export default function MyClass() {
   } = useAuth();
   const queryClient = useQueryClient();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isAddStudentDialogOpen, setIsAddStudentDialogOpen] = useState(false);
   const [isEditStudentDialogOpen, setIsEditStudentDialogOpen] = useState(false);
   const [selectedLectureId, setSelectedLectureId] = useState<string | null>(null);
   const [isTableVisible, setIsTableVisible] = useState(true);
@@ -32,12 +31,6 @@ export default function MyClass() {
   const [newClassTitle, setNewClassTitle] = useState('');
   const [newClassDate, setNewClassDate] = useState('');
   const [newClassCapacity, setNewClassCapacity] = useState('');
-
-  // Form states for adding student
-  const [studentName, setStudentName] = useState('');
-  const [studentEmail, setStudentEmail] = useState('');
-  const [studentLicense, setStudentLicense] = useState('');
-  const [studentPhone, setStudentPhone] = useState('');
 
   // Edit student form states
   const [editStudentName, setEditStudentName] = useState('');
@@ -135,38 +128,6 @@ export default function MyClass() {
     },
     onError: error => {
       toast.error('클래스 생성 실패: ' + error.message);
-    }
-  });
-
-  // Add student to whitelist mutation
-  const addStudentMutation = useMutation({
-    mutationFn: async () => {
-      if (!selectedLectureId || !profile?.user_id) throw new Error('강의를 선택해주세요.');
-      const {
-        error
-      } = await supabase.from('whitelist').insert({
-        lecture_id: selectedLectureId,
-        speaker_id: profile.user_id,
-        email: studentEmail,
-        student_name: studentName,
-        license_number: studentLicense,
-        phone_number: studentPhone
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['lecture-students']
-      });
-      setIsAddStudentDialogOpen(false);
-      setStudentName('');
-      setStudentEmail('');
-      setStudentLicense('');
-      setStudentPhone('');
-      toast.success('수강생이 등록되었습니다.');
-    },
-    onError: error => {
-      toast.error('수강생 등록 실패: ' + error.message);
     }
   });
 
