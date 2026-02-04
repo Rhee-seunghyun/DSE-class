@@ -281,7 +281,15 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: S
               <TableRow>
                 <TableHead style={{ width: columnWidths.isNew }} className="text-xs text-center relative">
                   <div className="flex items-center justify-center pr-2">
-                    신/재
+                    <span className="text-xs">신/재</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 shrink-0"
+                      onClick={() => handleSort('is_new_student' as keyof StudentData)}
+                    >
+                      {getSortIcon('is_new_student' as keyof StudentData)}
+                    </Button>
                     <ResizeHandle column="isNew" />
                   </div>
                 </TableHead>
