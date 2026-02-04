@@ -32,9 +32,9 @@ export default function MyLectures() {
     <DashboardLayout>
       <div className="space-y-6 animate-fade-in">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">내 강의</h1>
+          <h1 className="text-3xl font-bold text-foreground">My class</h1>
           <p className="text-muted-foreground mt-1">
-            수강 가능한 강의 목록입니다.
+            승인된 강의 목록입니다.
           </p>
         </div>
 
