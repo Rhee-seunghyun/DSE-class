@@ -51,8 +51,31 @@ export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSecti
   const [showDrawingTools, setShowDrawingTools] = useState(false);
   const [pdfPage, setPdfPage] = useState(1);
 
+  // localStorage 키 생성
+  const storageKey = `lecture-drawings-${lectureId}`;
+
   // 페이지별 필기 저장소: key = "materialId-pageNumber"
-  const [drawingsMap, setDrawingsMap] = useState<Record<string, DrawAction[]>>({});
+  const [drawingsMap, setDrawingsMap] = useState<Record<string, DrawAction[]>>(() => {
+    // localStorage에서 초기값 불러오기
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error('Failed to load drawings from localStorage:', e);
+    }
+    return {};
+  });
+
+  // drawingsMap이 변경될 때마다 localStorage에 저장
+  useEffect(() => {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(drawingsMap));
+    } catch (e) {
+      console.error('Failed to save drawings to localStorage:', e);
+    }
+  }, [drawingsMap, storageKey]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasDimensions, setCanvasDimensions] = useState({ width: 800, height: 600 });
