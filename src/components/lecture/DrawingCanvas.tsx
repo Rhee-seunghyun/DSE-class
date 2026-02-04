@@ -41,6 +41,7 @@ const HIGHLIGHTER_COLORS = [
 
 export function DrawingCanvas({ width, height, className }: DrawingCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [tool, setTool] = useState<Tool>('none');
   const [penColor, setPenColor] = useState('#000000');
@@ -48,6 +49,18 @@ export function DrawingCanvas({ width, height, className }: DrawingCanvasProps) 
   const [lineWidth, setLineWidth] = useState(3);
   const [actions, setActions] = useState<DrawAction[]>([]);
   const [currentPath, setCurrentPath] = useState<{ x: number; y: number }[]>([]);
+  const [isHovering, setIsHovering] = useState(false);
+  const [showToolbar, setShowToolbar] = useState(false);
+
+  // Show toolbar when hovering or when a tool is active
+  useEffect(() => {
+    if (isHovering || tool !== 'none' || isDrawing) {
+      setShowToolbar(true);
+    } else {
+      const timer = setTimeout(() => setShowToolbar(false), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [isHovering, tool, isDrawing]);
 
   const getContext = useCallback(() => {
     const canvas = canvasRef.current;
@@ -168,10 +181,24 @@ export function DrawingCanvas({ width, height, className }: DrawingCanvasProps) 
     setActions([]);
   };
 
+  const handleToolSelect = (selectedTool: Tool) => {
+    setTool(tool === selectedTool ? 'none' : selectedTool);
+  };
+
   return (
-    <div className={cn('relative', className)}>
-      {/* Toolbar */}
-      <div className="absolute top-2 left-2 z-20 flex items-center gap-1 bg-background/90 backdrop-blur-sm p-1 rounded-lg shadow-md border">
+    <div 
+      ref={containerRef}
+      className={cn('relative', className)}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+    >
+      {/* Toolbar - appears on hover */}
+      <div 
+        className={cn(
+          'absolute top-2 left-2 z-20 flex items-center gap-1 bg-background/95 backdrop-blur-sm p-1.5 rounded-lg shadow-lg border transition-all duration-300',
+          showToolbar ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
+        )}
+      >
         {/* Pen Tool */}
         <Popover>
           <PopoverTrigger asChild>
@@ -179,7 +206,7 @@ export function DrawingCanvas({ width, height, className }: DrawingCanvasProps) 
               variant={tool === 'pen' ? 'secondary' : 'ghost'}
               size="sm"
               className="h-8 w-8 p-0"
-              onClick={() => setTool(tool === 'pen' ? 'none' : 'pen')}
+              onClick={() => handleToolSelect('pen')}
             >
               <Pen className="h-4 w-4" style={{ color: tool === 'pen' ? penColor : undefined }} />
             </Button>
@@ -224,7 +251,7 @@ export function DrawingCanvas({ width, height, className }: DrawingCanvasProps) 
               variant={tool === 'highlighter' ? 'secondary' : 'ghost'}
               size="sm"
               className="h-8 w-8 p-0"
-              onClick={() => setTool(tool === 'highlighter' ? 'none' : 'highlighter')}
+              onClick={() => handleToolSelect('highlighter')}
             >
               <Highlighter className="h-4 w-4" style={{ color: tool === 'highlighter' ? highlighterColor : undefined }} />
             </Button>
@@ -254,7 +281,7 @@ export function DrawingCanvas({ width, height, className }: DrawingCanvasProps) 
           variant={tool === 'eraser' ? 'secondary' : 'ghost'}
           size="sm"
           className="h-8 w-8 p-0"
-          onClick={() => setTool(tool === 'eraser' ? 'none' : 'eraser')}
+          onClick={() => handleToolSelect('eraser')}
         >
           <Eraser className="h-4 w-4" />
         </Button>
