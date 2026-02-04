@@ -50,9 +50,12 @@ function extractStoragePath(fileUrl: string): string | null {
 export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSectionBlobProps) {
   const [selectedMaterialIndex, setSelectedMaterialIndex] = useState(0);
   const [showDrawingTools, setShowDrawingTools] = useState(false);
+  const [pdfPage, setPdfPage] = useState(1);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasDimensions, setCanvasDimensions] = useState({ width: 800, height: 600 });
+  const pdfOverlayTop = 48; // PdfCanvasViewer 상단 페이지 네비 높이(대략) - 버튼 클릭 영역 보호
+  const pdfOverlayHeight = Math.max(0, canvasDimensions.height - pdfOverlayTop);
 
   const [pdfBytes, setPdfBytes] = useState<Uint8Array | null>(null);
   const [blobLoading, setBlobLoading] = useState(false);
@@ -260,23 +263,30 @@ export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSecti
                 </Button>
               </div>
             ) : pdfBytes ? (
-              <PdfCanvasViewer pdfData={pdfBytes} />
+              <PdfCanvasViewer pdfData={pdfBytes} onPageChange={setPdfPage} />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
                 <p className="text-muted-foreground">강의 자료를 선택하세요.</p>
               </div>
             )}
 
-            {/* 워터마크 - PDF 뷰어 영역에만 표시 (DrawingCanvas 아래에 위치) */}
-            <DynamicWatermark className="absolute inset-0 z-10 pointer-events-none" />
-
-            <DrawingCanvas
-              key={currentMaterial?.id || selectedMaterialIndex}
-              width={canvasDimensions.width}
-              height={canvasDimensions.height}
-              className="absolute inset-0 z-20"
-              showToolbar={showDrawingTools}
-            />
+            {/*
+              워터마크/필기 오버레이는 PDF 출력 영역(상단 페이지 네비 제외)에만.
+              이렇게 해야 PdfCanvasViewer의 이전/다음 버튼이 필기 모드에서도 클릭됩니다.
+            */}
+            <div
+              className="absolute left-0 right-0 bottom-0 top-0 pointer-events-none overflow-hidden relative"
+              style={{ top: pdfOverlayTop }}
+            >
+              <DynamicWatermark className="absolute inset-0 z-10 pointer-events-none" />
+              <DrawingCanvas
+                key={`${currentMaterial?.id || selectedMaterialIndex}-${pdfPage}`}
+                width={canvasDimensions.width}
+                height={pdfOverlayHeight}
+                className="absolute inset-0 z-20"
+                showToolbar={showDrawingTools}
+              />
+            </div>
           </div>
 
           {showDrawingTools && (

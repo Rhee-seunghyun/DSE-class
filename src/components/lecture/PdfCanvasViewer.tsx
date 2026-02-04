@@ -16,9 +16,10 @@ GlobalWorkerOptions.workerSrc = new URL(
 interface PdfCanvasViewerProps {
   pdfData: Uint8Array;
   className?: string;
+  onPageChange?: (page: number) => void;
 }
 
-export function PdfCanvasViewer({ pdfData, className }: PdfCanvasViewerProps) {
+export function PdfCanvasViewer({ pdfData, className, onPageChange }: PdfCanvasViewerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<HTMLDivElement>(null);
@@ -29,6 +30,10 @@ export function PdfCanvasViewer({ pdfData, className }: PdfCanvasViewerProps) {
   const [error, setError] = useState<string | null>(null);
 
   const [containerSize, setContainerSize] = useState<{ width: number; height: number }>({ width: 800, height: 600 });
+
+  useEffect(() => {
+    onPageChange?.(page);
+  }, [onPageChange, page]);
 
   useEffect(() => {
     const el = viewerRef.current;

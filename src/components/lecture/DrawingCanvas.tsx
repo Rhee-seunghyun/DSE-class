@@ -185,12 +185,12 @@ export function DrawingCanvas({ width, height, className, showToolbar = false }:
   return (
     <div 
       ref={containerRef}
-      className={cn('relative', className)}
+      className={cn('relative pointer-events-none', className)}
     >
       {/* Toolbar - controlled by parent */}
       <div 
         className={cn(
-          'absolute top-2 left-2 z-20 flex items-center gap-1 bg-background/95 backdrop-blur-sm p-1.5 rounded-lg shadow-lg border transition-all duration-300',
+          'pointer-events-auto absolute top-2 left-2 z-20 flex items-center gap-1 bg-background/95 backdrop-blur-sm p-1.5 rounded-lg shadow-lg border transition-all duration-300',
           showToolbar ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
         )}
       >
@@ -306,14 +306,14 @@ export function DrawingCanvas({ width, height, className, showToolbar = false }:
         </Button>
       </div>
 
-      {/* Canvas - z-index 0 so toolbar (z-20) stays on top */}
+      {/* Canvas - only becomes interactive when a tool is selected */}
       <canvas
         ref={canvasRef}
         width={width}
         height={height}
         className={cn(
           'absolute inset-0 w-full h-full z-0',
-          tool !== 'none' ? 'cursor-crosshair' : 'pointer-events-none'
+          tool !== 'none' ? 'cursor-crosshair pointer-events-auto' : 'pointer-events-none'
         )}
         onMouseDown={startDrawing}
         onMouseMove={draw}
