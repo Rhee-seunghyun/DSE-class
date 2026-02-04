@@ -14,13 +14,16 @@ import {
   X,
   Mail,
   Phone,
-  GripVertical
+  GripVertical,
+  Eye
 } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { StatusMultiSelect } from './StatusMultiSelect';
+import { ApplicationDetailDialog } from './ApplicationDetailDialog';
 
 export interface StudentData {
   id: string;
@@ -35,6 +38,7 @@ export interface StudentData {
   certificate_sent: boolean;
   is_new_student?: boolean;
   is_registered?: boolean;
+  form_response_id?: string | null;
 }
 
 interface StudentTableProps {
@@ -62,12 +66,8 @@ const DEFAULT_COLUMN_WIDTHS: ColumnWidths = {
   license_number: 80,
   email: 140,
   phone_number: 120,
-  payment_confirmed: 64,
-  business_registration: 64,
-  invoice_issued: 64,
-  survey_completed: 64,
-  certificate_sent: 64,
-  actions: 80,
+  status_flags: 64,
+  actions: 100,
 };
 
 export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: StudentTableProps) {
@@ -77,6 +77,7 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: S
   const [columnWidths, setColumnWidths] = useState<ColumnWidths>(DEFAULT_COLUMN_WIDTHS);
   const resizingRef = useRef<{ column: string; startX: number; startWidth: number } | null>(null);
   const [activeFilterColumn, setActiveFilterColumn] = useState<string | null>(null);
+  const [selectedStudentForDetail, setSelectedStudentForDetail] = useState<StudentData | null>(null);
 
   const handleSort = (field: keyof StudentData) => {
     if (sortField === field) {
@@ -267,148 +268,133 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: S
     );
   };
 
+  const handleStatusChange = (studentId: string, field: string, value: boolean) => {
+    onCheckboxChange(studentId, field as keyof StudentData, value);
+  };
+
   return (
-    <ScrollArea className="h-[500px] w-full">
-      <div className="min-w-max">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead style={{ width: columnWidths.isNew }} className="text-xs text-center relative">
-                <div className="flex items-center justify-center pr-2">
-                  신/재
-                  <ResizeHandle column="isNew" />
-                </div>
-              </TableHead>
-              <TableHead style={{ width: columnWidths.is_registered }} className="text-center relative">
-                {renderCheckboxHeader('is_registered' as keyof StudentData, '승인')}
-              </TableHead>
-              <TableHead style={{ width: columnWidths.student_name }} className="relative">
-                {renderColumnHeader('student_name', '이름')}
-              </TableHead>
-              <TableHead style={{ width: columnWidths.license_number }} className="relative">
-                {renderColumnHeader('license_number', '면허')}
-              </TableHead>
-              <TableHead style={{ width: columnWidths.email }} className="relative">
-                {renderColumnHeader('email', <Mail className="w-4 h-4" />)}
-              </TableHead>
-              <TableHead style={{ width: columnWidths.phone_number }} className="relative">
-                {renderColumnHeader('phone_number', <Phone className="w-4 h-4" />)}
-              </TableHead>
-              <TableHead style={{ width: columnWidths.payment_confirmed }} className="text-center relative">
-                {renderCheckboxHeader('payment_confirmed', '입금')}
-              </TableHead>
-              <TableHead style={{ width: columnWidths.business_registration }} className="text-center relative">
-                {renderCheckboxHeader('business_registration', '사업자')}
-              </TableHead>
-              <TableHead style={{ width: columnWidths.invoice_issued }} className="text-center relative">
-                {renderCheckboxHeader('invoice_issued', '계산서')}
-              </TableHead>
-              <TableHead style={{ width: columnWidths.survey_completed }} className="text-center relative">
-                {renderCheckboxHeader('survey_completed', '설문')}
-              </TableHead>
-              <TableHead style={{ width: columnWidths.certificate_sent }} className="text-center relative">
-                {renderCheckboxHeader('certificate_sent', 'Certi')}
-              </TableHead>
-              <TableHead style={{ width: columnWidths.actions }} className="relative">
-                <ResizeHandle column="actions" />
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredAndSortedStudents.length > 0 ? (
-              filteredAndSortedStudents.map((student, index) => (
-                <TableRow key={student.id}>
-                  <TableCell style={{ width: columnWidths.isNew }} className="text-xs text-center font-medium">
-                    <span className={student.is_new_student !== false ? 'text-primary' : 'text-muted-foreground'}>
-                      {student.is_new_student !== false ? '신' : '재'}
-                    </span>
-                  </TableCell>
-                  <TableCell style={{ width: columnWidths.is_registered }} className="text-center">
-                    <Checkbox
-                      checked={student.is_registered || false}
-                      onCheckedChange={(checked) => 
-                        onCheckboxChange(student.id, 'is_registered' as keyof StudentData, checked as boolean)
-                      }
-                    />
-                  </TableCell>
-                  <TableCell style={{ width: columnWidths.student_name }} className="text-sm truncate">{student.student_name || '-'}</TableCell>
-                  <TableCell style={{ width: columnWidths.license_number }} className="text-sm truncate">{student.license_number || '-'}</TableCell>
-                  <TableCell style={{ width: columnWidths.email }} className="text-sm truncate">{student.email || '-'}</TableCell>
-                  <TableCell style={{ width: columnWidths.phone_number }} className="text-sm truncate">{student.phone_number || '-'}</TableCell>
-                  <TableCell style={{ width: columnWidths.payment_confirmed }} className="text-center">
-                    <Checkbox
-                      checked={student.payment_confirmed}
-                      onCheckedChange={(checked) => 
-                        onCheckboxChange(student.id, 'payment_confirmed', checked as boolean)
-                      }
-                    />
-                  </TableCell>
-                  <TableCell style={{ width: columnWidths.business_registration }} className="text-center">
-                    <Checkbox
-                      checked={student.business_registration}
-                      onCheckedChange={(checked) => 
-                        onCheckboxChange(student.id, 'business_registration', checked as boolean)
-                      }
-                    />
-                  </TableCell>
-                  <TableCell style={{ width: columnWidths.invoice_issued }} className="text-center">
-                    <Checkbox
-                      checked={student.invoice_issued}
-                      onCheckedChange={(checked) => 
-                        onCheckboxChange(student.id, 'invoice_issued', checked as boolean)
-                      }
-                    />
-                  </TableCell>
-                  <TableCell style={{ width: columnWidths.survey_completed }} className="text-center">
-                    <Checkbox
-                      checked={student.survey_completed}
-                      onCheckedChange={(checked) => 
-                        onCheckboxChange(student.id, 'survey_completed', checked as boolean)
-                      }
-                    />
-                  </TableCell>
-                  <TableCell style={{ width: columnWidths.certificate_sent }} className="text-center">
-                    <Checkbox
-                      checked={student.certificate_sent}
-                      onCheckedChange={(checked) => 
-                        onCheckboxChange(student.id, 'certificate_sent', checked as boolean)
-                      }
-                    />
-                  </TableCell>
-                  <TableCell style={{ width: columnWidths.actions }}>
-                    <div className="flex gap-1">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8"
-                        onClick={() => onEdit(student)}
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                        onClick={() => onDelete(student.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+    <>
+      <ScrollArea className="h-[500px] w-full">
+        <div className="min-w-max">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead style={{ width: columnWidths.isNew }} className="text-xs text-center relative">
+                  <div className="flex items-center justify-center pr-2">
+                    신/재
+                    <ResizeHandle column="isNew" />
+                  </div>
+                </TableHead>
+                <TableHead style={{ width: columnWidths.is_registered }} className="text-center relative">
+                  {renderCheckboxHeader('is_registered' as keyof StudentData, '승인')}
+                </TableHead>
+                <TableHead style={{ width: columnWidths.student_name }} className="relative">
+                  {renderColumnHeader('student_name', '이름')}
+                </TableHead>
+                <TableHead style={{ width: columnWidths.license_number }} className="relative">
+                  {renderColumnHeader('license_number', '면허')}
+                </TableHead>
+                <TableHead style={{ width: columnWidths.email }} className="relative">
+                  {renderColumnHeader('email', <Mail className="w-4 h-4" />)}
+                </TableHead>
+                <TableHead style={{ width: columnWidths.phone_number }} className="relative">
+                  {renderColumnHeader('phone_number', <Phone className="w-4 h-4" />)}
+                </TableHead>
+                <TableHead style={{ width: columnWidths.status_flags }} className="text-center relative">
+                  <div className="flex items-center justify-center pr-2">
+                    <span className="text-xs">관리</span>
+                    <ResizeHandle column="status_flags" />
+                  </div>
+                </TableHead>
+                <TableHead style={{ width: columnWidths.actions }} className="relative">
+                  <ResizeHandle column="actions" />
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredAndSortedStudents.length > 0 ? (
+                filteredAndSortedStudents.map((student) => (
+                  <TableRow key={student.id}>
+                    <TableCell style={{ width: columnWidths.isNew }} className="text-xs text-center font-medium">
+                      <span className={student.is_new_student !== false ? 'text-primary' : 'text-muted-foreground'}>
+                        {student.is_new_student !== false ? '신' : '재'}
+                      </span>
+                    </TableCell>
+                    <TableCell style={{ width: columnWidths.is_registered }} className="text-center">
+                      <Checkbox
+                        checked={student.is_registered || false}
+                        onCheckedChange={(checked) => 
+                          onCheckboxChange(student.id, 'is_registered' as keyof StudentData, checked as boolean)
+                        }
+                      />
+                    </TableCell>
+                    <TableCell style={{ width: columnWidths.student_name }} className="text-sm truncate">{student.student_name || '-'}</TableCell>
+                    <TableCell style={{ width: columnWidths.license_number }} className="text-sm truncate">{student.license_number || '-'}</TableCell>
+                    <TableCell style={{ width: columnWidths.email }} className="text-sm truncate">{student.email || '-'}</TableCell>
+                    <TableCell style={{ width: columnWidths.phone_number }} className="text-sm truncate">{student.phone_number || '-'}</TableCell>
+                    <TableCell style={{ width: columnWidths.status_flags }} className="text-center">
+                      <StatusMultiSelect
+                        paymentConfirmed={student.payment_confirmed}
+                        businessRegistration={student.business_registration}
+                        invoiceIssued={student.invoice_issued}
+                        surveyCompleted={student.survey_completed}
+                        certificateSent={student.certificate_sent}
+                        onStatusChange={(field, value) => handleStatusChange(student.id, field, value)}
+                      />
+                    </TableCell>
+                    <TableCell style={{ width: columnWidths.actions }}>
+                      <div className="flex gap-1">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8"
+                          onClick={() => setSelectedStudentForDetail(student)}
+                          title="신청서 보기"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8"
+                          onClick={() => onEdit(student)}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={() => onDelete(student.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                    등록된 수강생이 없습니다.
                   </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={12} className="text-center text-muted-foreground py-8">
-                  등록된 수강생이 없습니다.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      <ScrollBar orientation="horizontal" />
-      <ScrollBar orientation="vertical" />
-    </ScrollArea>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+        <ScrollBar orientation="horizontal" />
+        <ScrollBar orientation="vertical" />
+      </ScrollArea>
+
+      {/* Application Detail Dialog */}
+      <ApplicationDetailDialog
+        open={!!selectedStudentForDetail}
+        onOpenChange={(open) => !open && setSelectedStudentForDetail(null)}
+        formResponseId={selectedStudentForDetail?.form_response_id || null}
+        studentName={selectedStudentForDetail?.student_name || null}
+        studentEmail={selectedStudentForDetail?.email || ''}
+      />
+    </>
   );
 }
