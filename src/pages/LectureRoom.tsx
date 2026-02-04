@@ -1,10 +1,9 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, FileText } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase, logSecurityEvent } from '@/lib/supabase';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -14,6 +13,7 @@ import { useCaptureProtection } from '@/hooks/useCaptureProtection';
 import { DynamicWatermark } from '@/components/DynamicWatermark';
 import { StudentMaterialsSection } from '@/components/lecture/StudentMaterialsSection';
 import { CaptureWarningDialog } from '@/components/security/CaptureWarningDialog';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 
 export default function LectureRoom() {
   const { id } = useParams<{ id: string }>();
@@ -147,9 +147,9 @@ export default function LectureRoom() {
   return (
     <DashboardLayout>
       <DynamicWatermark />
-      <div className="space-y-6 animate-fade-in">
+      <div className="h-[calc(100vh-120px)] flex flex-col animate-fade-in">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => navigate('/my-lectures')}>
               <ArrowLeft className="w-5 h-5" />
@@ -161,42 +161,52 @@ export default function LectureRoom() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* PDF Viewer - Now using StudentMaterialsSection */}
-          <StudentMaterialsSection lectureId={id!} />
-
-          {/* Notes Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>내 노트</span>
-                <Button 
-                  size="sm" 
-                  onClick={handleSaveNotes}
-                  disabled={saveNoteMutation.isPending}
-                >
-                  {saveNoteMutation.isPending ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+        {/* Resizable Panels */}
+        <div className="flex-1 min-h-0">
+          <ResizablePanelGroup direction="horizontal" className="h-full rounded-lg border">
+            {/* PDF Viewer Panel */}
+            <ResizablePanel defaultSize={65} minSize={30}>
+              <StudentMaterialsSection lectureId={id!} />
+            </ResizablePanel>
+            
+            <ResizableHandle withHandle />
+            
+            {/* Notes Panel */}
+            <ResizablePanel defaultSize={35} minSize={20}>
+              <div className="h-full flex flex-col">
+                <div className="flex items-center justify-between p-4 border-b">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-5 h-5" />
+                    <span className="font-semibold">내 노트</span>
+                  </div>
+                  <Button 
+                    size="sm" 
+                    onClick={handleSaveNotes}
+                    disabled={saveNoteMutation.isPending}
+                  >
+                    {saveNoteMutation.isPending ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4 mr-2" />
+                    )}
+                    저장
+                  </Button>
+                </div>
+                <div className="flex-1 p-4">
+                  {noteLoading ? (
+                    <Skeleton className="h-full w-full" />
                   ) : (
-                    <Save className="w-4 h-4 mr-2" />
+                    <Textarea
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="강의를 들으며 메모를 작성하세요..."
+                      className="h-full resize-none"
+                    />
                   )}
-                  저장
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {noteLoading ? (
-                <Skeleton className="h-[500px] w-full" />
-              ) : (
-                <Textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="강의를 들으며 메모를 작성하세요..."
-                  className="h-[500px] resize-none"
-                />
-              )}
-            </CardContent>
-          </Card>
+                </div>
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
         </div>
       </div>
 

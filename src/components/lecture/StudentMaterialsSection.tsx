@@ -20,6 +20,18 @@ interface StudentMaterialsSectionProps {
   lectureId: string;
 }
 
+// Extract storage path from file_url
+function extractStoragePath(fileUrl: string): string | null {
+  // URL format: https://xxx.supabase.co/storage/v1/object/public/bucket-name/path/to/file
+  const match = fileUrl.match(/\/storage\/v1\/object\/(?:public|sign)\/lecture-files\/(.+)$/);
+  if (match) return match[1];
+  
+  // Alternative: if only path is stored
+  if (!fileUrl.startsWith('http')) return fileUrl;
+  
+  return null;
+}
+
 export function StudentMaterialsSection({ lectureId }: StudentMaterialsSectionProps) {
   const [selectedMaterialIndex, setSelectedMaterialIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -40,7 +52,36 @@ export function StudentMaterialsSection({ lectureId }: StudentMaterialsSectionPr
     enabled: !!lectureId
   });
 
+  // Generate signed URLs for materials
+  const { data: signedUrls, isLoading: urlsLoading } = useQuery({
+    queryKey: ['signed-urls', materials?.map(m => m.id)],
+    queryFn: async () => {
+      if (!materials || materials.length === 0) return {};
+      
+      const urlMap: Record<string, string> = {};
+      
+      for (const material of materials) {
+        const storagePath = extractStoragePath(material.file_url);
+        if (storagePath) {
+          const { data, error } = await supabase.storage
+            .from('lecture-files')
+            .createSignedUrl(storagePath, 3600); // 1 hour expiry
+          
+          if (data && !error) {
+            urlMap[material.id] = data.signedUrl;
+          } else {
+            console.error('Failed to create signed URL:', error);
+          }
+        }
+      }
+      
+      return urlMap;
+    },
+    enabled: !!materials && materials.length > 0
+  });
+
   const currentMaterial = materials?.[selectedMaterialIndex];
+  const currentSignedUrl = currentMaterial ? signedUrls?.[currentMaterial.id] : null;
 
   // Update canvas dimensions when container resizes
   useEffect(() => {
@@ -49,14 +90,24 @@ export function StudentMaterialsSection({ lectureId }: StudentMaterialsSectionPr
         const rect = containerRef.current.getBoundingClientRect();
         setCanvasDimensions({
           width: Math.round(rect.width),
-          height: 600, // Fixed height to match iframe
+          height: Math.round(rect.height),
         });
       }
     };
 
     updateDimensions();
     window.addEventListener('resize', updateDimensions);
-    return () => window.removeEventListener('resize', updateDimensions);
+    
+    // ResizeObserver for more accurate tracking
+    const resizeObserver = new ResizeObserver(updateDimensions);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+    
+    return () => {
+      window.removeEventListener('resize', updateDimensions);
+      resizeObserver.disconnect();
+    };
   }, []);
 
   const goToPrevious = () => {
@@ -71,100 +122,98 @@ export function StudentMaterialsSection({ lectureId }: StudentMaterialsSectionPr
     }
   };
 
-  if (isLoading) {
+  if (isLoading || urlsLoading) {
     return (
-      <Card className="lg:col-span-2">
-        <CardHeader>
+      <div className="h-full flex flex-col">
+        <div className="flex items-center justify-between p-4 border-b">
           <Skeleton className="h-6 w-32" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-[600px] w-full" />
-        </CardContent>
-      </Card>
+        </div>
+        <div className="flex-1 p-4">
+          <Skeleton className="h-full w-full" />
+        </div>
+      </div>
     );
   }
 
   if (!materials || materials.length === 0) {
     return (
-      <Card className="lg:col-span-2">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="w-5 h-5" />
-            강의 자료
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center h-[600px] bg-muted rounded-lg">
-            <p className="text-muted-foreground">게시된 강의 자료가 없습니다.</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="h-full flex flex-col">
+        <div className="flex items-center gap-2 p-4 border-b">
+          <FileText className="w-5 h-5" />
+          <span className="font-semibold">강의 자료</span>
+        </div>
+        <div className="flex-1 flex items-center justify-center bg-muted">
+          <p className="text-muted-foreground">게시된 강의 자료가 없습니다.</p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className="lg:col-span-2">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="w-5 h-5" />
-            강의 자료
-          </CardTitle>
-          {materials.length > 1 && (
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={goToPrevious}
-                disabled={selectedMaterialIndex === 0}
-              >
-                <ChevronUp className="w-4 h-4 mr-1" />
-                이전
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                {selectedMaterialIndex + 1} / {materials.length}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={goToNext}
-                disabled={selectedMaterialIndex === materials.length - 1}
-              >
-                다음
-                <ChevronDown className="w-4 h-4 ml-1" />
-              </Button>
-            </div>
-          )}
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center gap-2">
+          <FileText className="w-5 h-5" />
+          <span className="font-semibold">강의 자료</span>
         </div>
-        {/* Material selector dropdown for mobile */}
         {materials.length > 1 && (
-          <div className="mt-2">
-            <select
-              value={selectedMaterialIndex}
-              onChange={(e) => setSelectedMaterialIndex(Number(e.target.value))}
-              className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={goToPrevious}
+              disabled={selectedMaterialIndex === 0}
             >
-              {materials.map((material, index) => (
-                <option key={material.id} value={index}>
-                  {index + 1}. {material.file_name}
-                </option>
-              ))}
-            </select>
+              <ChevronUp className="w-4 h-4 mr-1" />
+              이전
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              {selectedMaterialIndex + 1} / {materials.length}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={goToNext}
+              disabled={selectedMaterialIndex === materials.length - 1}
+            >
+              다음
+              <ChevronDown className="w-4 h-4 ml-1" />
+            </Button>
           </div>
         )}
-      </CardHeader>
-      <CardContent>
-        {currentMaterial ? (
-          <div className="space-y-2">
+      </div>
+      
+      {/* Material selector dropdown for mobile */}
+      {materials.length > 1 && (
+        <div className="p-2 border-b">
+          <select
+            value={selectedMaterialIndex}
+            onChange={(e) => setSelectedMaterialIndex(Number(e.target.value))}
+            className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+          >
+            {materials.map((material, index) => (
+              <option key={material.id} value={index}>
+                {index + 1}. {material.file_name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+      
+      {/* Content */}
+      <div className="flex-1 flex flex-col p-4 overflow-hidden">
+        {currentMaterial && currentSignedUrl ? (
+          <div className="flex-1 flex flex-col space-y-2">
             <div className="text-sm font-medium text-muted-foreground">
               {currentMaterial.file_name}
             </div>
             <div 
               ref={containerRef}
-              className="relative w-full h-[600px] bg-muted rounded-lg overflow-hidden protected-content"
+              className="relative flex-1 bg-muted rounded-lg overflow-hidden protected-content"
             >
               <iframe
-                src={currentMaterial.file_url}
+                src={currentSignedUrl}
                 className="w-full h-full"
                 title={currentMaterial.file_name}
               />
@@ -176,15 +225,19 @@ export function StudentMaterialsSection({ lectureId }: StudentMaterialsSectionPr
               />
             </div>
             <p className="text-xs text-muted-foreground text-center">
-              💡 상단 도구를 사용하여 PDF 위에 필기할 수 있습니다 (펜, 형광펜, 지우개)
+              💡 마우스를 올리면 필기 도구가 나타납니다 (펜, 형광펜, 지우개)
             </p>
           </div>
+        ) : currentMaterial && !currentSignedUrl ? (
+          <div className="flex-1 flex items-center justify-center bg-muted rounded-lg">
+            <p className="text-muted-foreground">파일을 불러오는 중...</p>
+          </div>
         ) : (
-          <div className="flex items-center justify-center h-[600px] bg-muted rounded-lg">
+          <div className="flex-1 flex items-center justify-center bg-muted rounded-lg">
             <p className="text-muted-foreground">강의 자료를 선택하세요.</p>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
