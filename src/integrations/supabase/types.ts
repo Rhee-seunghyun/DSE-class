@@ -397,6 +397,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_valid_whitelist_submission: {
+        Args: {
+          _form_response_id: string
+          _lecture_id: string
+          _speaker_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "master" | "speaker" | "student"
