@@ -13,6 +13,7 @@ import { useState, useEffect } from 'react';
 import { useCaptureProtection } from '@/hooks/useCaptureProtection';
 import { DynamicWatermark } from '@/components/DynamicWatermark';
 import { StudentMaterialsSection } from '@/components/lecture/StudentMaterialsSection';
+import { CaptureWarningDialog } from '@/components/security/CaptureWarningDialog';
 
 export default function LectureRoom() {
   const { id } = useParams<{ id: string }>();
@@ -38,7 +39,7 @@ export default function LectureRoom() {
   });
 
   // 캡처 방지 활성화
-  useCaptureProtection({
+  const { showWarningDialog, dismissWarningDialog } = useCaptureProtection({
     enabled: true,
     lectureId: id,
     lectureTitle: lecture?.title,
@@ -198,6 +199,12 @@ export default function LectureRoom() {
           </Card>
         </div>
       </div>
+
+      {/* Capture Warning Dialog */}
+      <CaptureWarningDialog
+        open={showWarningDialog}
+        onConfirm={dismissWarningDialog}
+      />
     </DashboardLayout>
   );
 }

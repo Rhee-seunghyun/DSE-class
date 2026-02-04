@@ -1,7 +1,6 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { logSecurityEvent } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
 
 interface UseCaptureProtectionOptions {
   lectureId?: string;
@@ -9,22 +8,23 @@ interface UseCaptureProtectionOptions {
   enabled?: boolean;
 }
 
+interface UseCaptureProtectionReturn {
+  logAttempt: (eventType: string) => Promise<void>;
+  showWarningDialog: boolean;
+  dismissWarningDialog: () => void;
+}
+
 export function useCaptureProtection({
   lectureId,
   lectureTitle,
   enabled = true,
-}: UseCaptureProtectionOptions = {}) {
+}: UseCaptureProtectionOptions = {}): UseCaptureProtectionReturn {
   const { user, profile } = useAuth();
-  const { toast } = useToast();
+  const [showWarningDialog, setShowWarningDialog] = useState(false);
 
-  const showWarning = useCallback(() => {
-    toast({
-      variant: 'destructive',
-      title: '⚠️ 경고',
-      description: '무단 복제는 법적 처벌을 받을 수 있습니다.',
-      duration: 5000,
-    });
-  }, [toast]);
+  const dismissWarningDialog = useCallback(() => {
+    setShowWarningDialog(false);
+  }, []);
 
   const logAttempt = useCallback(async (eventType: string) => {
     await logSecurityEvent(
@@ -34,8 +34,8 @@ export function useCaptureProtection({
       lectureTitle,
       profile?.email
     );
-    showWarning();
-  }, [user?.id, lectureId, lectureTitle, profile?.email, showWarning]);
+    setShowWarningDialog(true);
+  }, [user?.id, lectureId, lectureTitle, profile?.email]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -51,6 +51,12 @@ export function useCaptureProtection({
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 's' || e.key === 'S')) {
         e.preventDefault();
         logAttempt('screenshot_shortcut');
+      }
+      
+      // Prevent Cmd+Shift+3, Cmd+Shift+4 (Mac screenshot)
+      if (e.metaKey && e.shiftKey && (e.key === '3' || e.key === '4' || e.key === '5')) {
+        e.preventDefault();
+        logAttempt('mac_screenshot');
       }
     };
 
@@ -99,5 +105,5 @@ export function useCaptureProtection({
     };
   }, [enabled, logAttempt]);
 
-  return { logAttempt };
+  return { logAttempt, showWarningDialog, dismissWarningDialog };
 }

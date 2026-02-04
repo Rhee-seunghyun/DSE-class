@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { DrawingCanvas } from './DrawingCanvas';
 
 interface LectureMaterial {
   id: string;
@@ -21,6 +22,8 @@ interface StudentMaterialsSectionProps {
 
 export function StudentMaterialsSection({ lectureId }: StudentMaterialsSectionProps) {
   const [selectedMaterialIndex, setSelectedMaterialIndex] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [canvasDimensions, setCanvasDimensions] = useState({ width: 800, height: 600 });
 
   const { data: materials, isLoading } = useQuery({
     queryKey: ['student-lecture-materials', lectureId],
@@ -38,6 +41,23 @@ export function StudentMaterialsSection({ lectureId }: StudentMaterialsSectionPr
   });
 
   const currentMaterial = materials?.[selectedMaterialIndex];
+
+  // Update canvas dimensions when container resizes
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setCanvasDimensions({
+          width: Math.round(rect.width),
+          height: 600, // Fixed height to match iframe
+        });
+      }
+    };
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
 
   const goToPrevious = () => {
     if (selectedMaterialIndex > 0) {
@@ -139,13 +159,25 @@ export function StudentMaterialsSection({ lectureId }: StudentMaterialsSectionPr
             <div className="text-sm font-medium text-muted-foreground">
               {currentMaterial.file_name}
             </div>
-            <div className="relative w-full h-[600px] bg-muted rounded-lg overflow-hidden">
+            <div 
+              ref={containerRef}
+              className="relative w-full h-[600px] bg-muted rounded-lg overflow-hidden protected-content"
+            >
               <iframe
                 src={currentMaterial.file_url}
                 className="w-full h-full"
                 title={currentMaterial.file_name}
               />
+              {/* Drawing overlay */}
+              <DrawingCanvas
+                width={canvasDimensions.width}
+                height={canvasDimensions.height}
+                className="absolute inset-0"
+              />
             </div>
+            <p className="text-xs text-muted-foreground text-center">
+              💡 상단 도구를 사용하여 PDF 위에 필기할 수 있습니다 (펜, 형광펜, 지우개)
+            </p>
           </div>
         ) : (
           <div className="flex items-center justify-center h-[600px] bg-muted rounded-lg">
