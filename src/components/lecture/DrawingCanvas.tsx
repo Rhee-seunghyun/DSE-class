@@ -7,20 +7,22 @@ import { cn } from '@/lib/utils';
 
 type Tool = 'pen' | 'highlighter' | 'eraser' | 'none';
 
+export interface DrawAction {
+  type: 'path';
+  points: { x: number; y: number }[];
+  color: string;
+  lineWidth: number;
+  opacity: number;
+}
+
 interface DrawingCanvasProps {
   width: number;
   height: number;
   className?: string;
   showToolbar?: boolean;
   onToolbarToggle?: () => void;
-}
-
-interface DrawAction {
-  type: 'path';
-  points: { x: number; y: number }[];
-  color: string;
-  lineWidth: number;
-  opacity: number;
+  initialActions?: DrawAction[];
+  onActionsChange?: (actions: DrawAction[]) => void;
 }
 
 const COLORS = [
@@ -41,7 +43,14 @@ const HIGHLIGHTER_COLORS = [
   '#FB923C', // Orange
 ];
 
-export function DrawingCanvas({ width, height, className, showToolbar = false }: DrawingCanvasProps) {
+export function DrawingCanvas({ 
+  width, 
+  height, 
+  className, 
+  showToolbar = false,
+  initialActions = [],
+  onActionsChange,
+}: DrawingCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -49,8 +58,13 @@ export function DrawingCanvas({ width, height, className, showToolbar = false }:
   const [penColor, setPenColor] = useState('#000000');
   const [highlighterColor, setHighlighterColor] = useState('#FBBF24');
   const [lineWidth, setLineWidth] = useState(3);
-  const [actions, setActions] = useState<DrawAction[]>([]);
+  const [actions, setActions] = useState<DrawAction[]>(initialActions);
   const [currentPath, setCurrentPath] = useState<{ x: number; y: number }[]>([]);
+
+  // Notify parent when actions change
+  useEffect(() => {
+    onActionsChange?.(actions);
+  }, [actions, onActionsChange]);
 
   // Reset tool when toolbar is hidden
   useEffect(() => {
