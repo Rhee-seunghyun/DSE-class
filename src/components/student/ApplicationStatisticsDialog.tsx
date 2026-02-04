@@ -63,15 +63,33 @@ export function ApplicationStatisticsDialog({
     enabled: open && !!form?.id,
   });
 
-  // Fetch all responses
+  // Fetch only responses that are in whitelist (linked via form_response_id)
   const { data: responses, isLoading } = useQuery({
-    queryKey: ['form-responses-for-stats', form?.id],
+    queryKey: ['form-responses-for-stats', form?.id, lectureId],
     queryFn: async () => {
       if (!form?.id) return [];
+      
+      // First get whitelist entries for this lecture that have form_response_id
+      const { data: whitelistData, error: whitelistError } = await supabase
+        .from('whitelist')
+        .select('form_response_id')
+        .eq('lecture_id', lectureId)
+        .not('form_response_id', 'is', null);
+
+      if (whitelistError) throw whitelistError;
+      
+      const formResponseIds = whitelistData
+        .map(w => w.form_response_id)
+        .filter((id): id is string => id !== null);
+      
+      if (formResponseIds.length === 0) return [];
+
+      // Fetch only form responses that are in the whitelist
       const { data, error } = await supabase
         .from('form_responses')
         .select('id, answers')
-        .eq('form_id', form.id);
+        .eq('form_id', form.id)
+        .in('id', formResponseIds);
 
       if (error) throw error;
       return data as FormResponse[];
