@@ -1,9 +1,9 @@
 import { useState, useMemo, useCallback, useRef } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   ArrowUpDown, 
   ArrowUp, 
@@ -65,7 +65,7 @@ type SortDirection = 'asc' | 'desc' | null;
 type SortField = keyof StudentData | null;
 
 interface ColumnFilter {
-  [key: string]: string;
+  [key: string]: string[];
 }
 
 interface ColumnWidths {
@@ -133,11 +133,21 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange, onM
     }
   };
 
-  const handleFilterChange = (column: string, value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      [column]: value
-    }));
+  const handleFilterToggle = (column: string, value: string) => {
+    setFilters(prev => {
+      const currentValues = prev[column] || [];
+      const newValues = currentValues.includes(value)
+        ? currentValues.filter(v => v !== value)
+        : [...currentValues, value];
+      
+      if (newValues.length === 0) {
+        const newFilters = { ...prev };
+        delete newFilters[column];
+        return newFilters;
+      }
+      
+      return { ...prev, [column]: newValues };
+    });
   };
 
   const clearFilter = (column: string) => {
@@ -180,13 +190,22 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange, onM
     let result = [...students];
 
     // Apply filters
-    Object.entries(filters).forEach(([column, filterValue]) => {
-      if (filterValue) {
-        result = result.filter(student => {
-          const value = student[column as keyof StudentData];
-          if (value === null || value === undefined) return false;
-          return String(value).toLowerCase().includes(filterValue.toLowerCase());
-        });
+    Object.entries(filters).forEach(([column, filterValues]) => {
+      if (filterValues && filterValues.length > 0) {
+        if (column === 'status_flags') {
+          // Special handling for status_flags - filter students that have ALL selected statuses as true
+          result = result.filter(student => {
+            return filterValues.every(statusField => {
+              return student[statusField as keyof StudentData] === true;
+            });
+          });
+        } else {
+          result = result.filter(student => {
+            const value = student[column as keyof StudentData];
+            if (value === null || value === undefined) return false;
+            return filterValues.includes(String(value));
+          });
+        }
       }
     });
 
@@ -215,13 +234,39 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange, onM
     return result;
   }, [students, filters, sortField, sortDirection]);
 
-  const getSortIcon = (field: keyof StudentData) => {
-    if (sortField !== field) {
-      return <ArrowUpDown className="w-3 h-3" />;
+  // Get unique filter options from data
+  const getFilterOptions = (column: string): { value: string; label: string }[] => {
+    const uniqueValues = new Set<string>();
+    students.forEach(student => {
+      const value = student[column as keyof StudentData];
+      if (value !== null && value !== undefined) {
+        uniqueValues.add(String(value));
+      }
+    });
+    
+    if (column === 'is_new_student') {
+      return [
+        { value: 'true', label: '신규' },
+        { value: 'false', label: '재수강' }
+      ];
     }
-    return sortDirection === 'asc' ? 
-      <ArrowUp className="w-3 h-3" /> : 
-      <ArrowDown className="w-3 h-3" />;
+    if (column === 'is_registered') {
+      return [
+        { value: 'true', label: '승인' },
+        { value: 'false', label: '대기' }
+      ];
+    }
+    if (column === 'status_flags') {
+      return [
+        { value: 'payment_confirmed', label: '입금' },
+        { value: 'business_registration', label: '사업자' },
+        { value: 'invoice_issued', label: '계산서' },
+        { value: 'survey_completed', label: '설문' },
+        { value: 'certificate_sent', label: '수료증' }
+      ];
+    }
+    
+    return Array.from(uniqueValues).map(v => ({ value: v, label: v }));
   };
 
   const ResizeHandle = ({ column }: { column: string }) => (
@@ -235,9 +280,16 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange, onM
     </div>
   );
 
-  const renderColumnHeader = (field: keyof StudentData, label: React.ReactNode, sortable = true, filterable = true) => {
-    const hasFilter = !!filters[field];
-    
+  const getSortIcon = (field: keyof StudentData) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="w-3 h-3" />;
+    }
+    return sortDirection === 'asc' ? 
+      <ArrowUp className="w-3 h-3" /> : 
+      <ArrowDown className="w-3 h-3" />;
+  };
+
+  const renderColumnHeader = (field: keyof StudentData, label: React.ReactNode, sortable = true) => {
     return (
       <div className="flex items-center gap-1 pr-2">
         <span className="text-xs truncate">{label}</span>
@@ -252,88 +304,65 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange, onM
               {getSortIcon(field)}
             </Button>
           )}
-          {filterable && (
-            <Popover open={activeFilterColumn === field} onOpenChange={(open) => setActiveFilterColumn(open ? field : null)}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={`h-6 w-6 ${hasFilter ? 'text-primary' : ''}`}
-                >
-                  <Filter className="w-3 h-3" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-48 p-2" align="start">
-                <div className="flex items-center gap-2">
-                  <Input
-                    placeholder="필터..."
-                    value={filters[field] || ''}
-                    onChange={(e) => handleFilterChange(field, e.target.value)}
-                    className="h-8 text-xs"
-                  />
-                  {hasFilter && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 shrink-0"
-                      onClick={() => clearFilter(field)}
-                    >
-                      <X className="w-3 h-3" />
-                    </Button>
-                  )}
-                </div>
-              </PopoverContent>
-            </Popover>
-          )}
         </div>
         <ResizeHandle column={field} />
       </div>
     );
   };
 
-  const renderCheckboxHeader = (field: keyof StudentData, label: string, filterable = false) => {
-    const hasFilter = !!filters[field];
+  const renderFilterHeader = (field: string, label: string) => {
+    const hasFilter = filters[field] && filters[field].length > 0;
+    const options = getFilterOptions(field);
     
     return (
       <div className="flex items-center gap-1 pr-2">
         <span className="text-xs truncate">{label}</span>
-        {filterable && (
-          <Popover open={activeFilterColumn === field} onOpenChange={(open) => setActiveFilterColumn(open ? field : null)}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className={`h-6 w-6 shrink-0 ${hasFilter ? 'text-primary' : ''}`}
-              >
-                <Filter className="w-3 h-3" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-48 p-2" align="start">
-              <div className="flex items-center gap-2">
-                <Input
-                  placeholder="필터..."
-                  value={filters[field] || ''}
-                  onChange={(e) => handleFilterChange(field, e.target.value)}
-                  className="h-8 text-xs"
-                />
-                {hasFilter && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 shrink-0"
-                    onClick={() => clearFilter(field)}
+        <Popover open={activeFilterColumn === field} onOpenChange={(open) => setActiveFilterColumn(open ? field : null)}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`h-6 w-6 shrink-0 ${hasFilter ? 'text-primary' : ''}`}
+            >
+              <Filter className="w-3 h-3" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-48 p-2" align="start">
+            <div className="space-y-2">
+              {options.map((option) => (
+                <div key={option.value} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`${field}-${option.value}`}
+                    checked={(filters[field] || []).includes(option.value)}
+                    onCheckedChange={() => handleFilterToggle(field, option.value)}
+                  />
+                  <label
+                    htmlFor={`${field}-${option.value}`}
+                    className="text-sm cursor-pointer"
                   >
-                    <X className="w-3 h-3" />
-                  </Button>
-                )}
-              </div>
-            </PopoverContent>
-          </Popover>
-        )}
+                    {option.label}
+                  </label>
+                </div>
+              ))}
+              {hasFilter && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full mt-2"
+                  onClick={() => clearFilter(field)}
+                >
+                  <X className="w-3 h-3 mr-1" />
+                  필터 초기화
+                </Button>
+              )}
+            </div>
+          </PopoverContent>
+        </Popover>
         <ResizeHandle column={field} />
       </div>
     );
   };
+
 
   const handleStatusChange = (studentId: string, field: string, value: boolean) => {
     onCheckboxChange(studentId, field as keyof StudentData, value);
@@ -371,36 +400,25 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange, onM
             <TableHeader>
               <TableRow>
               <TableHead style={{ width: columnWidths.isNew }} className="text-xs text-center relative">
-                  {renderCheckboxHeader('is_new_student' as keyof StudentData, '신/재', true)}
+                  {renderFilterHeader('is_new_student', '신/재')}
                 </TableHead>
                 <TableHead style={{ width: columnWidths.is_registered }} className="text-center relative">
-                  {renderCheckboxHeader('is_registered' as keyof StudentData, '승인', true)}
+                  {renderFilterHeader('is_registered', '승인')}
                 </TableHead>
                 <TableHead style={{ width: columnWidths.student_name }} className="relative">
-                  {renderColumnHeader('student_name', '이름')}
+                  {renderColumnHeader('student_name', '이름', false)}
                 </TableHead>
                 <TableHead style={{ width: columnWidths.license_number }} className="relative">
-                  {renderColumnHeader('license_number', '면허')}
+                  {renderColumnHeader('license_number', '면허', false)}
                 </TableHead>
                 <TableHead style={{ width: columnWidths.email }} className="relative">
-                  {renderColumnHeader('email', <Mail className="w-4 h-4" />)}
+                  {renderColumnHeader('email', <Mail className="w-4 h-4" />, false)}
                 </TableHead>
                 <TableHead style={{ width: columnWidths.phone_number }} className="relative">
-                  {renderColumnHeader('phone_number', <Phone className="w-4 h-4" />)}
+                  {renderColumnHeader('phone_number', <Phone className="w-4 h-4" />, false)}
                 </TableHead>
                 <TableHead style={{ width: columnWidths.status_flags }} className="text-center relative">
-                  <div className="flex items-center justify-center pr-2">
-                    <span className="text-xs">관리</span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 shrink-0"
-                      onClick={() => handleSort('payment_confirmed')}
-                    >
-                      {getSortIcon('payment_confirmed')}
-                    </Button>
-                    <ResizeHandle column="status_flags" />
-                  </div>
+                  {renderFilterHeader('status_flags', '관리')}
                 </TableHead>
                 <TableHead style={{ width: columnWidths.admin_memo }} className="text-center relative">
                   <div className="flex items-center justify-center pr-2">
