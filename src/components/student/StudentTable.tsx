@@ -51,6 +51,7 @@ export interface StudentData {
   is_registered?: boolean;
   form_response_id?: string | null;
   admin_memo?: string | null;
+  created_at?: string;
 }
 
 interface StudentTableProps {
@@ -73,6 +74,7 @@ interface ColumnWidths {
 }
 
 const DEFAULT_COLUMN_WIDTHS: ColumnWidths = {
+  rowNumber: 48,
   isNew: 48,
   is_registered: 80,
   student_name: 80,
@@ -233,6 +235,22 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange, onM
 
     return result;
   }, [students, filters, sortField, sortDirection]);
+
+  // Calculate row numbers based on created_at timestamp
+  const getRowNumber = useMemo(() => {
+    const sortedByCreatedAt = [...students].sort((a, b) => {
+      const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return aTime - bTime;
+    });
+    
+    const rowNumberMap = new Map<string, number>();
+    sortedByCreatedAt.forEach((student, index) => {
+      rowNumberMap.set(student.id, index + 1);
+    });
+    
+    return (studentId: string) => rowNumberMap.get(studentId) || 0;
+  }, [students]);
 
   // Get unique filter options from data
   const getFilterOptions = (column: string): { value: string; label: string }[] => {
@@ -399,7 +417,10 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange, onM
           <Table>
             <TableHeader>
               <TableRow>
-              <TableHead style={{ width: columnWidths.isNew }} className="text-xs text-center relative">
+                <TableHead style={{ width: columnWidths.rowNumber }} className="text-xs text-center relative">
+                  {renderColumnHeader('created_at' as keyof StudentData, 'No', true)}
+                </TableHead>
+                <TableHead style={{ width: columnWidths.isNew }} className="text-xs text-center relative">
                   {renderFilterHeader('is_new_student', '신/재')}
                 </TableHead>
                 <TableHead style={{ width: columnWidths.is_registered }} className="text-center relative">
@@ -443,6 +464,9 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange, onM
               {filteredAndSortedStudents.length > 0 ? (
                 filteredAndSortedStudents.map((student) => (
                   <TableRow key={student.id}>
+                    <TableCell style={{ width: columnWidths.rowNumber }} className="text-xs text-center font-medium text-muted-foreground">
+                      {getRowNumber(student.id)}
+                    </TableCell>
                     <TableCell style={{ width: columnWidths.isNew }} className="text-xs text-center font-medium">
                       <span className={student.is_new_student !== false ? 'text-primary' : 'text-muted-foreground'}>
                         {student.is_new_student !== false ? '신' : '재'}
@@ -553,7 +577,7 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange, onM
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
                     등록된 수강생이 없습니다.
                   </TableCell>
                 </TableRow>
