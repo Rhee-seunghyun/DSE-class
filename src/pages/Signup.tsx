@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import doableLogo from '@/assets/doable-logo.png';
+import { EmailVerificationDialog } from '@/components/auth/EmailVerificationDialog';
 
 export default function Signup() {
   const [email, setEmail] = useState('');
@@ -12,6 +13,7 @@ export default function Signup() {
   const [fullName, setFullName] = useState('');
   const [licenseNumber, setLicenseNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -70,11 +72,8 @@ export default function Signup() {
           .eq('email', email.toLowerCase());
       }
 
-      toast({
-        title: '회원가입 완료',
-        description: '이메일 인증 후 로그인해주세요.',
-      });
-      navigate('/login');
+      // Show email verification dialog instead of toast
+      setShowVerificationDialog(true);
     }
 
     setIsLoading(false);
@@ -197,6 +196,16 @@ export default function Signup() {
           draggable={false}
         />
       </div>
+
+      {/* Email Verification Dialog */}
+      <EmailVerificationDialog
+        open={showVerificationDialog}
+        email={email}
+        onConfirm={() => {
+          setShowVerificationDialog(false);
+          navigate('/login');
+        }}
+      />
     </div>
   );
 }
