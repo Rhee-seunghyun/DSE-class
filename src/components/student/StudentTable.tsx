@@ -311,6 +311,14 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: S
                 <TableHead style={{ width: columnWidths.status_flags }} className="text-center relative">
                   <div className="flex items-center justify-center pr-2">
                     <span className="text-xs">관리</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 shrink-0"
+                      onClick={() => handleSort('payment_confirmed')}
+                    >
+                      {getSortIcon('payment_confirmed')}
+                    </Button>
                     <ResizeHandle column="status_flags" />
                   </div>
                 </TableHead>
