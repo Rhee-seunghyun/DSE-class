@@ -270,11 +270,11 @@ export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSecti
             )}
 
             {/*
-              워터마크/필기 오버레이는 PDF 출력 영역(상단 페이지 네비 제외)에만.
-              이렇게 해야 PdfCanvasViewer의 이전/다음 버튼이 필기 모드에서도 클릭됩니다.
+              필기 오버레이: 상단 페이지 네비 영역(이전/다음 버튼)을 피해서 배치.
+              overflow-visible로 해야 도구모음이 보임.
             */}
             <div
-              className="absolute left-0 right-0 bottom-0 top-0 pointer-events-none overflow-hidden relative"
+              className="absolute left-0 right-0 bottom-0 pointer-events-none"
               style={{ top: pdfOverlayTop }}
             >
               <DrawingCanvas
