@@ -311,6 +311,7 @@ export type Database = {
       }
       whitelist: {
         Row: {
+          admin_memo: string | null
           business_registration: boolean
           certificate_sent: boolean
           created_at: string
@@ -329,6 +330,7 @@ export type Database = {
           survey_completed: boolean
         }
         Insert: {
+          admin_memo?: string | null
           business_registration?: boolean
           certificate_sent?: boolean
           created_at?: string
@@ -347,6 +349,7 @@ export type Database = {
           survey_completed?: boolean
         }
         Update: {
+          admin_memo?: string | null
           business_registration?: boolean
           certificate_sent?: boolean
           created_at?: string

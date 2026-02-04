@@ -1,8 +1,8 @@
 import { useState, useMemo, useCallback, useRef } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { 
   ArrowUpDown, 
@@ -15,13 +15,24 @@ import {
   Mail,
   Phone,
   GripVertical,
-  Eye
+  Eye,
+  MessageSquare
 } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { StatusMultiSelect } from './StatusMultiSelect';
 import { ApplicationDetailDialog } from './ApplicationDetailDialog';
 
@@ -39,6 +50,7 @@ export interface StudentData {
   is_new_student?: boolean;
   is_registered?: boolean;
   form_response_id?: string | null;
+  admin_memo?: string | null;
 }
 
 interface StudentTableProps {
@@ -46,6 +58,7 @@ interface StudentTableProps {
   onEdit: (student: StudentData) => void;
   onDelete: (studentId: string) => void;
   onCheckboxChange: (studentId: string, field: keyof StudentData, value: boolean) => void;
+  onMemoChange?: (studentId: string, memo: string) => void;
 }
 
 type SortDirection = 'asc' | 'desc' | null;
@@ -61,16 +74,40 @@ interface ColumnWidths {
 
 const DEFAULT_COLUMN_WIDTHS: ColumnWidths = {
   isNew: 48,
-  is_registered: 56,
+  is_registered: 80,
   student_name: 80,
   license_number: 80,
   email: 140,
   phone_number: 120,
   status_flags: 64,
+  admin_memo: 80,
   actions: 100,
 };
 
-export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: StudentTableProps) {
+// 신/재 + 승인/대기 상태에 따른 색상 (모노톤)
+const getStatusStyle = (isNew: boolean, isRegistered: boolean) => {
+  if (isNew && isRegistered) {
+    // 신-승인: 가장 진한 색
+    return 'bg-foreground text-background font-semibold';
+  } else if (isNew && !isRegistered) {
+    // 신-대기: 중간 진한 색
+    return 'bg-muted-foreground text-background';
+  } else if (!isNew && isRegistered) {
+    // 재-승인: 연한 색
+    return 'bg-muted text-foreground';
+  } else {
+    // 재-대기: 가장 연한 색
+    return 'bg-muted/50 text-muted-foreground';
+  }
+};
+
+const getStatusLabel = (isNew: boolean, isRegistered: boolean) => {
+  const prefix = isNew ? '신' : '재';
+  const suffix = isRegistered ? '승인' : '대기';
+  return `${prefix}-${suffix}`;
+};
+
+export function StudentTable({ students, onEdit, onDelete, onCheckboxChange, onMemoChange }: StudentTableProps) {
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
   const [filters, setFilters] = useState<ColumnFilter>({});
@@ -78,6 +115,9 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: S
   const resizingRef = useRef<{ column: string; startX: number; startWidth: number } | null>(null);
   const [activeFilterColumn, setActiveFilterColumn] = useState<string | null>(null);
   const [selectedStudentForDetail, setSelectedStudentForDetail] = useState<StudentData | null>(null);
+  const [approvalDialogStudent, setApprovalDialogStudent] = useState<StudentData | null>(null);
+  const [editingMemoId, setEditingMemoId] = useState<string | null>(null);
+  const [memoValue, setMemoValue] = useState('');
 
   const handleSort = (field: keyof StudentData) => {
     if (sortField === field) {
@@ -272,6 +312,30 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: S
     onCheckboxChange(studentId, field as keyof StudentData, value);
   };
 
+  const handleApprovalClick = (student: StudentData) => {
+    setApprovalDialogStudent(student);
+  };
+
+  const handleApprovalConfirm = (approve: boolean) => {
+    if (approvalDialogStudent) {
+      onCheckboxChange(approvalDialogStudent.id, 'is_registered', approve);
+      setApprovalDialogStudent(null);
+    }
+  };
+
+  const handleMemoClick = (student: StudentData) => {
+    setEditingMemoId(student.id);
+    setMemoValue(student.admin_memo || '');
+  };
+
+  const handleMemoSave = (studentId: string) => {
+    if (onMemoChange) {
+      onMemoChange(studentId, memoValue);
+    }
+    setEditingMemoId(null);
+    setMemoValue('');
+  };
+
   return (
     <>
       <ScrollArea className="h-[500px] w-full">
@@ -322,6 +386,20 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: S
                     <ResizeHandle column="status_flags" />
                   </div>
                 </TableHead>
+                <TableHead style={{ width: columnWidths.admin_memo }} className="text-center relative">
+                  <div className="flex items-center justify-center pr-2">
+                    <span className="text-xs">메모</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 shrink-0"
+                      onClick={() => handleSort('admin_memo' as keyof StudentData)}
+                    >
+                      {getSortIcon('admin_memo' as keyof StudentData)}
+                    </Button>
+                    <ResizeHandle column="admin_memo" />
+                  </div>
+                </TableHead>
                 <TableHead style={{ width: columnWidths.actions }} className="relative">
                   <ResizeHandle column="actions" />
                 </TableHead>
@@ -336,13 +414,15 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: S
                         {student.is_new_student !== false ? '신' : '재'}
                       </span>
                     </TableCell>
-                    <TableCell style={{ width: columnWidths.is_registered }} className="text-center">
-                      <Checkbox
-                        checked={student.is_registered || false}
-                        onCheckedChange={(checked) => 
-                          onCheckboxChange(student.id, 'is_registered' as keyof StudentData, checked as boolean)
-                        }
-                      />
+                    <TableCell style={{ width: columnWidths.is_registered }} className="text-center p-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`h-7 px-2 text-xs rounded ${getStatusStyle(student.is_new_student !== false, student.is_registered || false)}`}
+                        onClick={() => handleApprovalClick(student)}
+                      >
+                        {getStatusLabel(student.is_new_student !== false, student.is_registered || false)}
+                      </Button>
                     </TableCell>
                     <TableCell style={{ width: columnWidths.student_name }} className="text-sm truncate">{student.student_name || '-'}</TableCell>
                     <TableCell style={{ width: columnWidths.license_number }} className="text-sm truncate">{student.license_number || '-'}</TableCell>
@@ -357,6 +437,54 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: S
                         certificateSent={student.certificate_sent}
                         onStatusChange={(field, value) => handleStatusChange(student.id, field, value)}
                       />
+                    </TableCell>
+                    <TableCell style={{ width: columnWidths.admin_memo }} className="text-center">
+                      <Popover 
+                        open={editingMemoId === student.id} 
+                        onOpenChange={(open) => {
+                          if (open) {
+                            handleMemoClick(student);
+                          } else {
+                            setEditingMemoId(null);
+                          }
+                        }}
+                      >
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={`h-7 w-7 ${student.admin_memo ? 'text-primary' : 'text-muted-foreground'}`}
+                            title={student.admin_memo || '메모 추가'}
+                          >
+                            <MessageSquare className="w-4 h-4" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-64 p-3" align="start">
+                          <div className="space-y-2">
+                            <Textarea
+                              placeholder="특이사항을 입력하세요..."
+                              value={memoValue}
+                              onChange={(e) => setMemoValue(e.target.value)}
+                              className="min-h-[80px] text-sm"
+                            />
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setEditingMemoId(null)}
+                              >
+                                취소
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => handleMemoSave(student.id)}
+                              >
+                                저장
+                              </Button>
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
                     </TableCell>
                     <TableCell style={{ width: columnWidths.actions }}>
                       <div className="flex gap-1">
@@ -391,7 +519,7 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: S
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                     등록된 수강생이 없습니다.
                   </TableCell>
                 </TableRow>
@@ -411,6 +539,38 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: S
         studentName={selectedStudentForDetail?.student_name || null}
         studentEmail={selectedStudentForDetail?.email || ''}
       />
+
+      {/* Approval Confirmation Dialog */}
+      <AlertDialog open={!!approvalDialogStudent} onOpenChange={(open) => !open && setApprovalDialogStudent(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>수강생 상태 변경</AlertDialogTitle>
+            <AlertDialogDescription>
+              <span className="font-medium">{approvalDialogStudent?.student_name || approvalDialogStudent?.email}</span>
+              님의 상태를 선택해주세요.
+              <br />
+              <span className="text-muted-foreground text-xs mt-1 block">
+                현재 상태: {approvalDialogStudent && getStatusLabel(approvalDialogStudent.is_new_student !== false, approvalDialogStudent.is_registered || false)}
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => handleApprovalConfirm(false)}
+              className="bg-muted text-muted-foreground hover:bg-muted/80"
+            >
+              대기
+            </AlertDialogAction>
+            <AlertDialogAction
+              onClick={() => handleApprovalConfirm(true)}
+              className="bg-foreground text-background hover:bg-foreground/90"
+            >
+              승인
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
