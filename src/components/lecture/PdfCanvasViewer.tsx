@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, ExternalLink, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -16,11 +16,9 @@ GlobalWorkerOptions.workerSrc = new URL(
 interface PdfCanvasViewerProps {
   pdfData: Uint8Array;
   className?: string;
-  fileName?: string;
-  openUrl?: string | null;
 }
 
-export function PdfCanvasViewer({ pdfData, className, openUrl }: PdfCanvasViewerProps) {
+export function PdfCanvasViewer({ pdfData, className }: PdfCanvasViewerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<HTMLDivElement>(null);
@@ -155,14 +153,6 @@ export function PdfCanvasViewer({ pdfData, className, openUrl }: PdfCanvasViewer
             <ChevronRight className="w-4 h-4 ml-1" />
           </Button>
 
-          {openUrl ? (
-            <Button asChild variant="outline" size="sm">
-              <a href={openUrl} target="_blank" rel="noreferrer">
-                <ExternalLink className="w-4 h-4 mr-1" />
-                새창
-              </a>
-            </Button>
-          ) : null}
         </div>
       </div>
 

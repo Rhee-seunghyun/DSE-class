@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 import { DrawingCanvas } from "./DrawingCanvas";
 import { PdfCanvasViewer } from "./PdfCanvasViewer";
+import { DynamicWatermark } from "@/components/DynamicWatermark";
 
 interface LectureMaterial {
   id: string;
@@ -54,7 +55,6 @@ export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSecti
   const [canvasDimensions, setCanvasDimensions] = useState({ width: 800, height: 600 });
 
   const [pdfBytes, setPdfBytes] = useState<Uint8Array | null>(null);
-  const [openUrl, setOpenUrl] = useState<string | null>(null);
   const [blobLoading, setBlobLoading] = useState(false);
   const [blobError, setBlobError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -103,20 +103,15 @@ export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSecti
     };
   }, []);
 
-  // Download PDF as Blob and render with blob: URL (avoids iframe cross-origin / frame blocking issues)
+  // Download PDF as Blob
   useEffect(() => {
     let cancelled = false;
-    let nextOpenUrl: string | null = null;
 
     async function run() {
       // cleanup previous
       setBlobError(null);
       setBlobLoading(false);
       setPdfBytes(null);
-      setOpenUrl((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return null;
-      });
 
       if (!currentStoragePath) return;
 
@@ -132,9 +127,6 @@ export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSecti
       }
 
       const buf = await data.arrayBuffer();
-      const pdfBlob = new Blob([buf], { type: "application/pdf" });
-      nextOpenUrl = URL.createObjectURL(pdfBlob);
-      setOpenUrl(nextOpenUrl);
       setPdfBytes(new Uint8Array(buf));
       setBlobLoading(false);
     }
@@ -143,7 +135,6 @@ export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSecti
 
     return () => {
       cancelled = true;
-      if (nextOpenUrl) URL.revokeObjectURL(nextOpenUrl);
     };
   }, [currentStoragePath, reloadKey]);
 
@@ -269,7 +260,7 @@ export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSecti
                 </Button>
               </div>
             ) : pdfBytes ? (
-              <PdfCanvasViewer pdfData={pdfBytes} openUrl={openUrl} />
+              <PdfCanvasViewer pdfData={pdfBytes} />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
                 <p className="text-muted-foreground">강의 자료를 선택하세요.</p>
@@ -282,6 +273,9 @@ export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSecti
               className={`absolute inset-0 z-10 ${showDrawingTools ? "pointer-events-auto" : "pointer-events-none"}`}
               showToolbar={showDrawingTools}
             />
+
+            {/* 워터마크 - PDF 뷰어 영역에 표시 */}
+            <DynamicWatermark className="absolute inset-0 z-20 pointer-events-none" />
           </div>
 
           {showDrawingTools && (
