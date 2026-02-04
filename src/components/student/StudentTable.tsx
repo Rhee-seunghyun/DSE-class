@@ -370,22 +370,11 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange, onM
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead style={{ width: columnWidths.isNew }} className="text-xs text-center relative">
-                  <div className="flex items-center justify-center pr-2">
-                    <span className="text-xs">신/재</span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 shrink-0"
-                      onClick={() => handleSort('is_new_student' as keyof StudentData)}
-                    >
-                      {getSortIcon('is_new_student' as keyof StudentData)}
-                    </Button>
-                    <ResizeHandle column="isNew" />
-                  </div>
+              <TableHead style={{ width: columnWidths.isNew }} className="text-xs text-center relative">
+                  {renderCheckboxHeader('is_new_student' as keyof StudentData, '신/재', true)}
                 </TableHead>
                 <TableHead style={{ width: columnWidths.is_registered }} className="text-center relative">
-                  {renderCheckboxHeader('is_registered' as keyof StudentData, '승인')}
+                  {renderCheckboxHeader('is_registered' as keyof StudentData, '승인', true)}
                 </TableHead>
                 <TableHead style={{ width: columnWidths.student_name }} className="relative">
                   {renderColumnHeader('student_name', '이름')}
