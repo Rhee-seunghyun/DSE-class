@@ -16,9 +16,9 @@ export function DynamicWatermark({ className = '' }: DynamicWatermarkProps) {
     profile.license_number ? `면허번호: ${profile.license_number}` : '',
   ].filter(Boolean).join(' · ');
 
-  // Smaller grid for PDF area only
+  // 5x5 grid for PDF area
   const rows = 5;
-  const cols = 3;
+  const cols = 5;
 
   return (
     <div className={`${className}`}>
@@ -26,8 +26,8 @@ export function DynamicWatermark({ className = '' }: DynamicWatermarkProps) {
         <div 
           className="flex flex-col items-center justify-center"
           style={{ 
-            transform: 'rotate(-30deg)',
-            gap: '100px',
+            transform: 'rotate(-45deg)',
+            gap: '80px',
           }}
         >
           {Array.from({ length: rows }).map((_, rowIndex) => (

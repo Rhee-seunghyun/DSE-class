@@ -306,13 +306,13 @@ export function DrawingCanvas({ width, height, className, showToolbar = false }:
         </Button>
       </div>
 
-      {/* Canvas */}
+      {/* Canvas - z-index 0 so toolbar (z-20) stays on top */}
       <canvas
         ref={canvasRef}
         width={width}
         height={height}
         className={cn(
-          'absolute inset-0 w-full h-full',
+          'absolute inset-0 w-full h-full z-0',
           tool !== 'none' ? 'cursor-crosshair' : 'pointer-events-none'
         )}
         onMouseDown={startDrawing}
