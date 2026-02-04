@@ -4,7 +4,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, FileText, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase, logSecurityEvent } from '@/lib/supabase';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import { useCaptureProtection } from '@/hooks/useCaptureProtection';
 import { DynamicWatermark } from '@/components/DynamicWatermark';
+import { StudentMaterialsSection } from '@/components/lecture/StudentMaterialsSection';
 
 export default function LectureRoom() {
   const { id } = useParams<{ id: string }>();
@@ -160,30 +161,8 @@ export default function LectureRoom() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* PDF Viewer */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="w-5 h-5" />
-                강의 자료
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {lecture.pdf_url ? (
-                <div className="relative w-full h-[600px] bg-muted rounded-lg overflow-hidden">
-                  <iframe
-                    src={lecture.pdf_url}
-                    className="w-full h-full"
-                    title="강의 자료"
-                  />
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-[600px] bg-muted rounded-lg">
-                  <p className="text-muted-foreground">업로드된 강의 자료가 없습니다.</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          {/* PDF Viewer - Now using StudentMaterialsSection */}
+          <StudentMaterialsSection lectureId={id!} />
 
           {/* Notes Section */}
           <Card>
