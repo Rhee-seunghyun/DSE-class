@@ -11,6 +11,8 @@ interface DrawingCanvasProps {
   width: number;
   height: number;
   className?: string;
+  showToolbar?: boolean;
+  onToolbarToggle?: () => void;
 }
 
 interface DrawAction {
@@ -39,7 +41,7 @@ const HIGHLIGHTER_COLORS = [
   '#FB923C', // Orange
 ];
 
-export function DrawingCanvas({ width, height, className }: DrawingCanvasProps) {
+export function DrawingCanvas({ width, height, className, showToolbar = false }: DrawingCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -49,18 +51,13 @@ export function DrawingCanvas({ width, height, className }: DrawingCanvasProps) 
   const [lineWidth, setLineWidth] = useState(3);
   const [actions, setActions] = useState<DrawAction[]>([]);
   const [currentPath, setCurrentPath] = useState<{ x: number; y: number }[]>([]);
-  const [isHovering, setIsHovering] = useState(false);
-  const [showToolbar, setShowToolbar] = useState(false);
 
-  // Show toolbar when hovering or when a tool is active
+  // Reset tool when toolbar is hidden
   useEffect(() => {
-    if (isHovering || tool !== 'none' || isDrawing) {
-      setShowToolbar(true);
-    } else {
-      const timer = setTimeout(() => setShowToolbar(false), 1500);
-      return () => clearTimeout(timer);
+    if (!showToolbar) {
+      setTool('none');
     }
-  }, [isHovering, tool, isDrawing]);
+  }, [showToolbar]);
 
   const getContext = useCallback(() => {
     const canvas = canvasRef.current;
@@ -189,10 +186,8 @@ export function DrawingCanvas({ width, height, className }: DrawingCanvasProps) 
     <div 
       ref={containerRef}
       className={cn('relative', className)}
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}
     >
-      {/* Toolbar - appears on hover */}
+      {/* Toolbar - controlled by parent */}
       <div 
         className={cn(
           'absolute top-2 left-2 z-20 flex items-center gap-1 bg-background/95 backdrop-blur-sm p-1.5 rounded-lg shadow-lg border transition-all duration-300',
