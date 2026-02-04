@@ -51,6 +51,18 @@ export function LectureMaterialsDialog({
     enabled: open && !!lectureId
   });
 
+  // Helper function to sanitize filename for storage
+  const sanitizeFileName = (fileName: string): string => {
+    // Replace Korean characters and special characters with underscores
+    // Keep only alphanumeric, dash, underscore, and dot
+    return fileName
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+      .replace(/[^\w\-_.]/g, '_') // Replace non-alphanumeric with underscore
+      .replace(/_+/g, '_') // Replace multiple underscores with single
+      .replace(/^_|_$/g, ''); // Remove leading/trailing underscores
+  };
+
   // Upload material mutation
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
@@ -61,7 +73,9 @@ export function LectureMaterialsDialog({
         throw new Error('PDF 파일만 업로드 가능합니다.');
       }
 
-      const filePath = `${speakerId}/${lectureId}/${Date.now()}_${file.name}`;
+      // Sanitize filename for storage path
+      const sanitizedName = sanitizeFileName(file.name);
+      const filePath = `${speakerId}/${lectureId}/${Date.now()}_${sanitizedName}`;
       
       const { error: uploadError } = await supabase.storage
         .from('lecture-files')
@@ -228,7 +242,7 @@ export function LectureMaterialsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>강의자료 관리</DialogTitle>
           <DialogDescription>
@@ -306,7 +320,7 @@ export function LectureMaterialsDialog({
                         <FileText className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                         <span className="text-sm font-medium truncate">{material.file_name}</span>
                         {material.is_published && (
-                          <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full flex-shrink-0">
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full flex-shrink-0">
                             게시됨
                           </span>
                         )}
