@@ -65,14 +65,13 @@ export default function Apply() {
   const submitMutation = useMutation({
     mutationFn: async () => {
       // Find name and email from answers (first two short_answer questions typically)
-      const shortAnswerQuestions = questions?.filter(q => q.question_type === 'short_answer') || [];
-      
-      // Try to find name and email based on question text
       let applicantName = '';
       let applicantEmail = '';
       let licenseNumber = '';
+      let phoneNumber = '';
+      let isNewStudent = true; // Default to new student
 
-      questions?.forEach(q => {
+      questions?.forEach((q, index) => {
         const answer = answers[q.id];
         const questionLower = q.question_text.toLowerCase();
         
@@ -85,9 +84,21 @@ export default function Apply() {
         if (questionLower.includes('면허') || questionLower.includes('license')) {
           licenseNumber = answer || '';
         }
+        if (questionLower.includes('연락처') || questionLower.includes('전화') || questionLower.includes('phone')) {
+          phoneNumber = answer || '';
+        }
+        // 5th question (index 4) determines new/returning student
+        if (index === 4) {
+          const answerValue = answer || '';
+          // "재수강" or contains "재" means returning student
+          if (answerValue.includes('재수강') || answerValue.includes('재')) {
+            isNewStudent = false;
+          }
+        }
       });
 
       // Fallback: use first two short answers if name/email not found
+      const shortAnswerQuestions = questions?.filter(q => q.question_type === 'short_answer') || [];
       if (!applicantName && shortAnswerQuestions.length > 0) {
         applicantName = answers[shortAnswerQuestions[0].id] || 'Unknown';
       }
@@ -105,7 +116,8 @@ export default function Apply() {
         finalAnswers[q.id] = answer;
       });
 
-      const { error } = await supabase
+      // 1. Save to form_responses for viewing responses later
+      const { data: responseData, error: responseError } = await supabase
         .from('form_responses')
         .insert({
           form_id: formId,
@@ -114,9 +126,28 @@ export default function Apply() {
           license_number: licenseNumber || null,
           answers: finalAnswers,
           status: 'pending',
+        })
+        .select('id')
+        .single();
+
+      if (responseError) throw responseError;
+
+      // 2. Directly insert into whitelist (Class DB) with is_registered = false
+      const { error: whitelistError } = await supabase
+        .from('whitelist')
+        .insert({
+          lecture_id: form!.lecture_id,
+          speaker_id: form!.speaker_id,
+          email: applicantEmail,
+          student_name: applicantName,
+          license_number: licenseNumber || null,
+          phone_number: phoneNumber || null,
+          is_new_student: isNewStudent,
+          is_registered: false, // Not approved yet (Pre-student)
+          form_response_id: responseData.id,
         });
 
-      if (error) throw error;
+      if (whitelistError) throw whitelistError;
     },
     onSuccess: () => {
       setSubmitted(true);

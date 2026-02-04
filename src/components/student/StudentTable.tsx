@@ -34,6 +34,7 @@ export interface StudentData {
   survey_completed: boolean;
   certificate_sent: boolean;
   is_new_student?: boolean;
+  is_registered?: boolean;
 }
 
 interface StudentTableProps {
@@ -56,6 +57,7 @@ interface ColumnWidths {
 
 const DEFAULT_COLUMN_WIDTHS: ColumnWidths = {
   isNew: 48,
+  is_registered: 56,
   student_name: 80,
   license_number: 80,
   email: 140,
@@ -277,6 +279,9 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: S
                   <ResizeHandle column="isNew" />
                 </div>
               </TableHead>
+              <TableHead style={{ width: columnWidths.is_registered }} className="text-center relative">
+                {renderCheckboxHeader('is_registered' as keyof StudentData, '승인')}
+              </TableHead>
               <TableHead style={{ width: columnWidths.student_name }} className="relative">
                 {renderColumnHeader('student_name', '이름')}
               </TableHead>
@@ -317,6 +322,14 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: S
                     <span className={student.is_new_student !== false ? 'text-primary' : 'text-muted-foreground'}>
                       {student.is_new_student !== false ? '신' : '재'}
                     </span>
+                  </TableCell>
+                  <TableCell style={{ width: columnWidths.is_registered }} className="text-center">
+                    <Checkbox
+                      checked={student.is_registered || false}
+                      onCheckedChange={(checked) => 
+                        onCheckboxChange(student.id, 'is_registered' as keyof StudentData, checked as boolean)
+                      }
+                    />
                   </TableCell>
                   <TableCell style={{ width: columnWidths.student_name }} className="text-sm truncate">{student.student_name || '-'}</TableCell>
                   <TableCell style={{ width: columnWidths.license_number }} className="text-sm truncate">{student.license_number || '-'}</TableCell>
@@ -386,7 +399,7 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange }: S
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={12} className="text-center text-muted-foreground py-8">
                   등록된 수강생이 없습니다.
                 </TableCell>
               </TableRow>
