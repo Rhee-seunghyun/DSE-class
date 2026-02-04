@@ -271,9 +271,10 @@ export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSecti
             <DynamicWatermark className="absolute inset-0 z-10 pointer-events-none" />
 
             <DrawingCanvas
+              key={currentMaterial?.id || selectedMaterialIndex}
               width={canvasDimensions.width}
               height={canvasDimensions.height}
-              className={`absolute inset-0 z-20 ${showDrawingTools ? "pointer-events-auto" : "pointer-events-none"}`}
+              className="absolute inset-0 z-20"
               showToolbar={showDrawingTools}
             />
           </div>
