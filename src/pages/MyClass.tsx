@@ -6,14 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, ChevronDown, ChevronUp, Upload, FileText, ClipboardList, Users } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, Upload, FileText, ClipboardList, BarChart3 } from 'lucide-react';
 import { StudentTable, StudentData } from '@/components/student/StudentTable';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ApplicationFormDialog } from '@/components/forms/ApplicationFormDialog';
-import { FormResponsesDialog } from '@/components/forms/FormResponsesDialog';
-// StudentEntry is now handled by StudentData from StudentTable component
+import { ApplicationStatisticsDialog } from '@/components/student/ApplicationStatisticsDialog';
+
 export default function MyClass() {
   const {
     profile
@@ -25,7 +25,7 @@ export default function MyClass() {
   const [isTableVisible, setIsTableVisible] = useState(true);
   const [editingStudent, setEditingStudent] = useState<StudentData | null>(null);
   const [isApplicationFormDialogOpen, setIsApplicationFormDialogOpen] = useState(false);
-  const [isResponsesDialogOpen, setIsResponsesDialogOpen] = useState(false);
+  const [isStatisticsDialogOpen, setIsStatisticsDialogOpen] = useState(false);
 
   // Form states for creating class
   const [newClassTitle, setNewClassTitle] = useState('');
@@ -314,19 +314,19 @@ export default function MyClass() {
                     size="sm" 
                     variant="outline" 
                     className="gap-1"
-                    onClick={() => setIsApplicationFormDialogOpen(true)}
+                    onClick={() => setIsStatisticsDialogOpen(true)}
                   >
-                    <ClipboardList className="w-4 h-4" />
-                    세미나 신청서
+                    <BarChart3 className="w-4 h-4" />
+                    신청서 통계
                   </Button>
                   <Button 
                     size="sm" 
                     variant="outline" 
                     className="gap-1"
-                    onClick={() => setIsResponsesDialogOpen(true)}
+                    onClick={() => setIsApplicationFormDialogOpen(true)}
                   >
-                    <Users className="w-4 h-4" />
-                    신청 목록
+                    <ClipboardList className="w-4 h-4" />
+                    세미나 신청서
                   </Button>
                   <label>
                     <input
@@ -415,15 +415,12 @@ export default function MyClass() {
           />
         )}
 
-        {/* Form Responses Dialog */}
-        {applicationForm && selectedLecture && profile?.user_id && (
-          <FormResponsesDialog
-            open={isResponsesDialogOpen}
-            onOpenChange={setIsResponsesDialogOpen}
-            formId={applicationForm.id}
-            formTitle={applicationForm.title}
+        {/* Application Statistics Dialog */}
+        {selectedLecture && (
+          <ApplicationStatisticsDialog
+            open={isStatisticsDialogOpen}
+            onOpenChange={setIsStatisticsDialogOpen}
             lectureId={selectedLecture.id}
-            speakerId={profile.user_id}
           />
         )}
       </div>
