@@ -406,10 +406,10 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange, onM
                   {renderFilterHeader('is_registered', '승인')}
                 </TableHead>
                 <TableHead style={{ width: columnWidths.student_name }} className="relative">
-                  {renderColumnHeader('student_name', '이름', false)}
+                  {renderColumnHeader('student_name', '이름', true)}
                 </TableHead>
                 <TableHead style={{ width: columnWidths.license_number }} className="relative">
-                  {renderColumnHeader('license_number', '면허', false)}
+                  {renderColumnHeader('license_number', '면허', true)}
                 </TableHead>
                 <TableHead style={{ width: columnWidths.email }} className="relative">
                   {renderColumnHeader('email', <Mail className="w-4 h-4" />, false)}
