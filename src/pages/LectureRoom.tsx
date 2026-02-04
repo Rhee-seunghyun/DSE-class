@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import { useCaptureProtection } from '@/hooks/useCaptureProtection';
 import { DynamicWatermark } from '@/components/DynamicWatermark';
-import { StudentMaterialsSection } from '@/components/lecture/StudentMaterialsSection';
+import { StudentMaterialsSectionBlob } from '@/components/lecture/StudentMaterialsSectionBlob';
 import { CaptureWarningDialog } from '@/components/security/CaptureWarningDialog';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 
@@ -166,7 +166,7 @@ export default function LectureRoom() {
           <ResizablePanelGroup direction="horizontal" className="h-full rounded-lg border">
             {/* PDF Viewer Panel */}
             <ResizablePanel defaultSize={65} minSize={30}>
-              <StudentMaterialsSection lectureId={id!} />
+              <StudentMaterialsSectionBlob lectureId={id!} />
             </ResizablePanel>
             
             <ResizableHandle withHandle />
