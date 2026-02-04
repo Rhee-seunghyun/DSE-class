@@ -235,6 +235,20 @@ export default function MyClass() {
     }
   };
 
+  const handleMemoChange = async (studentId: string, memo: string) => {
+    const { error } = await supabase
+      .from('whitelist')
+      .update({ admin_memo: memo })
+      .eq('id', studentId);
+    
+    if (error) {
+      toast.error('메모 저장 실패: ' + error.message);
+    } else {
+      queryClient.invalidateQueries({ queryKey: ['lecture-students'] });
+      toast.success('메모가 저장되었습니다.');
+    }
+  };
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -360,6 +374,7 @@ export default function MyClass() {
                   onEdit={handleEditStudent}
                   onDelete={(studentId) => deleteStudentMutation.mutate(studentId)}
                   onCheckboxChange={handleCheckboxChange}
+                  onMemoChange={handleMemoChange}
                 />
               </CardContent>
             )}
