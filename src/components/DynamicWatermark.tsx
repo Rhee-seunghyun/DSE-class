@@ -16,9 +16,9 @@ export function DynamicWatermark({ className = '' }: DynamicWatermarkProps) {
     profile.license_number ? `면허번호: ${profile.license_number}` : '',
   ].filter(Boolean).join(' · ');
 
-  // 5x5 grid for PDF area
+  // 7x5 grid for PDF area
   const rows = 5;
-  const cols = 5;
+  const cols = 7;
 
   return (
     <div className={`${className}`}>
