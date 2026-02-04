@@ -64,6 +64,9 @@ export default function Apply() {
   // Submit response mutation
   const submitMutation = useMutation({
     mutationFn: async () => {
+      if (!form) throw new Error('폼 정보를 불러오지 못했습니다.');
+      if (!questions || questions.length === 0) throw new Error('질문 정보를 불러오지 못했습니다.');
+
       // Find name and email from answers (first two short_answer questions typically)
       let applicantName = '';
       let applicantEmail = '';
@@ -116,19 +119,31 @@ export default function Apply() {
         finalAnswers[q.id] = answer;
       });
 
+      // Debug: help diagnose persistent submission issues (will show in console logs)
+      console.log('[Apply] Submitting form response', {
+        paramFormId: formId,
+        dbFormId: form.id,
+        isActive: form.is_active,
+        lectureId: form.lecture_id,
+        speakerId: form.speaker_id,
+      });
+
+      // Generate ID client-side so we don't rely on RETURNING/representation under RLS
+      const responseId = crypto.randomUUID();
+
       // 1. Save to form_responses for viewing responses later
-      const { data: responseData, error: responseError } = await supabase
+      const { error: responseError } = await supabase
         .from('form_responses')
         .insert({
-          form_id: formId,
+          id: responseId,
+          // Use DB form.id to guarantee exact UUID match for RLS checks
+          form_id: form.id,
           applicant_name: applicantName,
           applicant_email: applicantEmail,
           license_number: licenseNumber || null,
           answers: finalAnswers,
           status: 'pending',
-        })
-        .select('id')
-        .single();
+        });
 
       if (responseError) throw responseError;
 
@@ -144,7 +159,7 @@ export default function Apply() {
           phone_number: phoneNumber || null,
           is_new_student: isNewStudent,
           is_registered: false, // Not approved yet (Pre-student)
-          form_response_id: responseData.id,
+          form_response_id: responseId,
         });
 
       if (whitelistError) throw whitelistError;
