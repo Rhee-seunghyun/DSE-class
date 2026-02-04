@@ -1,12 +1,12 @@
 import { ChevronDown, ChevronUp, FileText, Pencil, PencilOff, RefreshCw } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 
-import { DrawingCanvas } from "./DrawingCanvas";
+import { DrawingCanvas, DrawAction } from "./DrawingCanvas";
 import { PdfCanvasViewer } from "./PdfCanvasViewer";
 
 interface LectureMaterial {
@@ -51,6 +51,9 @@ export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSecti
   const [showDrawingTools, setShowDrawingTools] = useState(false);
   const [pdfPage, setPdfPage] = useState(1);
 
+  // 페이지별 필기 저장소: key = "materialId-pageNumber"
+  const [drawingsMap, setDrawingsMap] = useState<Record<string, DrawAction[]>>({});
+
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasDimensions, setCanvasDimensions] = useState({ width: 800, height: 600 });
   const pdfOverlayTop = 72; // PdfCanvasViewer 상단 페이지 네비 영역 보호(여유 있게)
@@ -81,6 +84,25 @@ export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSecti
     if (!currentMaterial) return null;
     return extractStoragePath(currentMaterial.file_url);
   }, [currentMaterial]);
+
+  // 현재 페이지의 고유 키 생성
+  const currentDrawingKey = useMemo(() => {
+    const materialId = currentMaterial?.id || `material-${selectedMaterialIndex}`;
+    return `${materialId}-page-${pdfPage}`;
+  }, [currentMaterial?.id, selectedMaterialIndex, pdfPage]);
+
+  // 현재 페이지의 저장된 필기 불러오기
+  const currentPageActions = useMemo(() => {
+    return drawingsMap[currentDrawingKey] || [];
+  }, [drawingsMap, currentDrawingKey]);
+
+  // 필기 변경 시 저장
+  const handleActionsChange = useCallback((actions: DrawAction[]) => {
+    setDrawingsMap(prev => ({
+      ...prev,
+      [currentDrawingKey]: actions,
+    }));
+  }, [currentDrawingKey]);
 
   // Update canvas dimensions when container resizes
   useEffect(() => {
@@ -278,11 +300,13 @@ export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSecti
               style={{ top: pdfOverlayTop }}
             >
               <DrawingCanvas
-                key={`${currentMaterial?.id || selectedMaterialIndex}-${pdfPage}`}
+                key={currentDrawingKey}
                 width={canvasDimensions.width}
                 height={pdfOverlayHeight}
                 className="absolute inset-0 z-20"
                 showToolbar={showDrawingTools}
+                initialActions={currentPageActions}
+                onActionsChange={handleActionsChange}
               />
             </div>
           </div>
