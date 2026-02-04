@@ -10,32 +10,47 @@ export function DynamicWatermark({ className = '' }: DynamicWatermarkProps) {
   if (!profile) return null;
 
   // Include name, email, and license number in watermark
-  const watermarkLines = [
+  const watermarkText = [
     profile.full_name,
     profile.email,
     profile.license_number ? `면허번호: ${profile.license_number}` : '',
-  ].filter(Boolean);
+  ].filter(Boolean).join(' · ');
+
+  // Create a large grid to cover rotated area (rotation increases needed coverage)
+  const rows = 12;
+  const cols = 8;
 
   return (
-    <div className={`watermark ${className}`}>
+    <div className={`${className}`}>
       <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
+        {/* Expanded container for 45-degree rotation coverage */}
         <div 
-          className="absolute inset-0 flex items-center justify-center"
+          className="absolute"
           style={{
+            top: '-50%',
+            left: '-50%',
+            width: '200%',
+            height: '200%',
             transform: 'rotate(-45deg)',
+            transformOrigin: 'center center',
           }}
         >
-          <div className="flex flex-col gap-32">
-            {Array.from({ length: 7 }).map((_, rowIndex) => (
-              <div key={rowIndex} className="flex gap-24">
-                {Array.from({ length: 5 }).map((_, colIndex) => (
+          <div 
+            className="w-full h-full flex flex-col justify-center items-center"
+            style={{ gap: '80px' }}
+          >
+            {Array.from({ length: rows }).map((_, rowIndex) => (
+              <div 
+                key={rowIndex} 
+                className="flex justify-center items-center w-full"
+                style={{ gap: '120px' }}
+              >
+                {Array.from({ length: cols }).map((_, colIndex) => (
                   <div
                     key={colIndex}
-                    className="whitespace-nowrap text-foreground/10 text-sm md:text-base font-medium"
+                    className="whitespace-nowrap text-foreground/15 text-xs font-medium"
                   >
-                    {watermarkLines.map((line, lineIndex) => (
-                      <div key={lineIndex}>{line}</div>
-                    ))}
+                    {watermarkText}
                   </div>
                 ))}
               </div>
