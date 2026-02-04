@@ -267,15 +267,15 @@ export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSecti
               </div>
             )}
 
+            {/* 워터마크 - PDF 뷰어 영역에만 표시 (DrawingCanvas 아래에 위치) */}
+            <DynamicWatermark className="absolute inset-0 z-10 pointer-events-none" />
+
             <DrawingCanvas
               width={canvasDimensions.width}
               height={canvasDimensions.height}
-              className={`absolute inset-0 z-10 ${showDrawingTools ? "pointer-events-auto" : "pointer-events-none"}`}
+              className={`absolute inset-0 z-20 ${showDrawingTools ? "pointer-events-auto" : "pointer-events-none"}`}
               showToolbar={showDrawingTools}
             />
-
-            {/* 워터마크 - PDF 뷰어 영역에 표시 */}
-            <DynamicWatermark className="absolute inset-0 z-20 pointer-events-none" />
           </div>
 
           {showDrawingTools && (
