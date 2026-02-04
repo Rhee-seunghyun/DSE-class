@@ -338,7 +338,7 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange, onM
 
   return (
     <>
-      <ScrollArea className="h-[500px] w-full">
+      <ScrollArea className="w-full">
         <div className="min-w-max">
           <Table>
             <TableHeader>
