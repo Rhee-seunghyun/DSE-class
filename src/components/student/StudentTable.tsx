@@ -291,18 +291,45 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange, onM
     );
   };
 
-  const renderCheckboxHeader = (field: keyof StudentData, label: string) => {
+  const renderCheckboxHeader = (field: keyof StudentData, label: string, filterable = false) => {
+    const hasFilter = !!filters[field];
+    
     return (
       <div className="flex items-center gap-1 pr-2">
         <span className="text-xs truncate">{label}</span>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6 shrink-0"
-          onClick={() => handleSort(field)}
-        >
-          {getSortIcon(field)}
-        </Button>
+        {filterable && (
+          <Popover open={activeFilterColumn === field} onOpenChange={(open) => setActiveFilterColumn(open ? field : null)}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`h-6 w-6 shrink-0 ${hasFilter ? 'text-primary' : ''}`}
+              >
+                <Filter className="w-3 h-3" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-48 p-2" align="start">
+              <div className="flex items-center gap-2">
+                <Input
+                  placeholder="필터..."
+                  value={filters[field] || ''}
+                  onChange={(e) => handleFilterChange(field, e.target.value)}
+                  className="h-8 text-xs"
+                />
+                {hasFilter && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 shrink-0"
+                    onClick={() => clearFilter(field)}
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+        )}
         <ResizeHandle column={field} />
       </div>
     );
