@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 
 import { DrawingCanvas } from "./DrawingCanvas";
 import { PdfCanvasViewer } from "./PdfCanvasViewer";
-import { DynamicWatermark } from "@/components/DynamicWatermark";
 
 interface LectureMaterial {
   id: string;
@@ -54,7 +53,7 @@ export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSecti
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasDimensions, setCanvasDimensions] = useState({ width: 800, height: 600 });
-  const pdfOverlayTop = 48; // PdfCanvasViewer 상단 페이지 네비 높이(대략) - 버튼 클릭 영역 보호
+  const pdfOverlayTop = 72; // PdfCanvasViewer 상단 페이지 네비 영역 보호(여유 있게)
   const pdfOverlayHeight = Math.max(0, canvasDimensions.height - pdfOverlayTop);
 
   const [pdfBytes, setPdfBytes] = useState<Uint8Array | null>(null);
@@ -263,7 +262,7 @@ export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSecti
                 </Button>
               </div>
             ) : pdfBytes ? (
-              <PdfCanvasViewer pdfData={pdfBytes} onPageChange={setPdfPage} />
+              <PdfCanvasViewer pdfData={pdfBytes} onPageChange={setPdfPage} showWatermark />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
                 <p className="text-muted-foreground">강의 자료를 선택하세요.</p>
@@ -278,7 +277,6 @@ export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSecti
               className="absolute left-0 right-0 bottom-0 top-0 pointer-events-none overflow-hidden relative"
               style={{ top: pdfOverlayTop }}
             >
-              <DynamicWatermark className="absolute inset-0 z-10 pointer-events-none" />
               <DrawingCanvas
                 key={`${currentMaterial?.id || selectedMaterialIndex}-${pdfPage}`}
                 width={canvasDimensions.width}

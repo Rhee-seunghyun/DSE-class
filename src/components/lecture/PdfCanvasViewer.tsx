@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { DynamicWatermark } from "@/components/DynamicWatermark";
 
 // pdfjs-dist types are a bit inconsistent across bundlers; keep imports simple.
 import { GlobalWorkerOptions, getDocument } from "pdfjs-dist";
@@ -17,9 +18,10 @@ interface PdfCanvasViewerProps {
   pdfData: Uint8Array;
   className?: string;
   onPageChange?: (page: number) => void;
+  showWatermark?: boolean;
 }
 
-export function PdfCanvasViewer({ pdfData, className, onPageChange }: PdfCanvasViewerProps) {
+export function PdfCanvasViewer({ pdfData, className, onPageChange, showWatermark = false }: PdfCanvasViewerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<HTMLDivElement>(null);
@@ -162,6 +164,7 @@ export function PdfCanvasViewer({ pdfData, className, onPageChange }: PdfCanvasV
       </div>
 
       <div ref={viewerRef} className="relative z-0 flex-1 min-h-0 bg-muted rounded-lg overflow-hidden">
+        {showWatermark && <DynamicWatermark className="absolute inset-0 z-10" />}
         {loading ? (
           <div className="absolute inset-0 flex items-center justify-center">
             <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />

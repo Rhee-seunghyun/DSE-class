@@ -10,7 +10,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import { useCaptureProtection } from '@/hooks/useCaptureProtection';
-import { DynamicWatermark } from '@/components/DynamicWatermark';
 import { StudentMaterialsSectionBlob } from '@/components/lecture/StudentMaterialsSectionBlob';
 import { CaptureWarningDialog } from '@/components/security/CaptureWarningDialog';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
@@ -146,7 +145,6 @@ export default function LectureRoom() {
 
   return (
     <DashboardLayout>
-      <DynamicWatermark />
       <div className="h-[calc(100vh-120px)] flex flex-col animate-fade-in">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
