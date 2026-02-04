@@ -244,7 +244,7 @@ export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSecti
           >
             {materials.map((material, index) => (
               <option key={material.id} value={index}>
-                {index + 1}. {material.file_name}
+                자료 {index + 1}
               </option>
             ))}
           </select>
@@ -253,7 +253,7 @@ export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSecti
 
       <div className="flex-1 flex flex-col p-4 overflow-hidden">
         <div className="flex-1 flex flex-col space-y-2">
-          <div className="text-sm font-medium text-muted-foreground">{currentMaterial?.file_name}</div>
+          <div className="text-sm font-medium text-muted-foreground">자료 {selectedMaterialIndex + 1}</div>
 
           <div ref={containerRef} className="relative flex-1 bg-muted rounded-lg overflow-hidden protected-content">
             {blobLoading ? (
@@ -269,7 +269,7 @@ export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSecti
                 </Button>
               </div>
             ) : pdfBytes ? (
-              <PdfCanvasViewer pdfData={pdfBytes} fileName={currentMaterial?.file_name} openUrl={openUrl} />
+              <PdfCanvasViewer pdfData={pdfBytes} openUrl={openUrl} />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
                 <p className="text-muted-foreground">강의 자료를 선택하세요.</p>
@@ -279,7 +279,7 @@ export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSecti
             <DrawingCanvas
               width={canvasDimensions.width}
               height={canvasDimensions.height}
-              className="absolute inset-0"
+              className={`absolute inset-0 z-10 ${showDrawingTools ? "pointer-events-auto" : "pointer-events-none"}`}
               showToolbar={showDrawingTools}
             />
           </div>

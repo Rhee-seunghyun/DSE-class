@@ -20,7 +20,7 @@ interface PdfCanvasViewerProps {
   openUrl?: string | null;
 }
 
-export function PdfCanvasViewer({ pdfData, className, fileName, openUrl }: PdfCanvasViewerProps) {
+export function PdfCanvasViewer({ pdfData, className, openUrl }: PdfCanvasViewerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<HTMLDivElement>(null);
@@ -134,12 +134,8 @@ export function PdfCanvasViewer({ pdfData, className, fileName, openUrl }: PdfCa
 
   return (
     <div ref={wrapRef} className={cn("h-full w-full flex flex-col", className)}>
-      <div className="flex items-center justify-between gap-2 py-2">
-        <div className="min-w-0">
-          {fileName ? (
-            <p className="text-sm font-medium text-muted-foreground truncate">{fileName}</p>
-          ) : null}
-        </div>
+      <div className="relative z-20 flex items-center justify-between gap-2 py-2">
+        <div className="min-w-0" />
 
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={!canPrev}>
@@ -170,7 +166,7 @@ export function PdfCanvasViewer({ pdfData, className, fileName, openUrl }: PdfCa
         </div>
       </div>
 
-      <div ref={viewerRef} className="relative flex-1 min-h-0 bg-muted rounded-lg overflow-hidden">
+      <div ref={viewerRef} className="relative z-0 flex-1 min-h-0 bg-muted rounded-lg overflow-hidden">
         {loading ? (
           <div className="absolute inset-0 flex items-center justify-center">
             <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
