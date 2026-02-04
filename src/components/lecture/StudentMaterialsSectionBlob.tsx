@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 
 import { DrawingCanvas } from "./DrawingCanvas";
+import { PdfCanvasViewer } from "./PdfCanvasViewer";
 
 interface LectureMaterial {
   id: string;
@@ -52,7 +53,8 @@ export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSecti
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasDimensions, setCanvasDimensions] = useState({ width: 800, height: 600 });
 
-  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [pdfBytes, setPdfBytes] = useState<Uint8Array | null>(null);
+  const [openUrl, setOpenUrl] = useState<string | null>(null);
   const [blobLoading, setBlobLoading] = useState(false);
   const [blobError, setBlobError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -104,13 +106,14 @@ export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSecti
   // Download PDF as Blob and render with blob: URL (avoids iframe cross-origin / frame blocking issues)
   useEffect(() => {
     let cancelled = false;
-    let nextUrl: string | null = null;
+    let nextOpenUrl: string | null = null;
 
     async function run() {
       // cleanup previous
       setBlobError(null);
       setBlobLoading(false);
-      setBlobUrl((prev) => {
+      setPdfBytes(null);
+      setOpenUrl((prev) => {
         if (prev) URL.revokeObjectURL(prev);
         return null;
       });
@@ -128,8 +131,11 @@ export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSecti
         return;
       }
 
-      nextUrl = URL.createObjectURL(data);
-      setBlobUrl(nextUrl);
+      const buf = await data.arrayBuffer();
+      const pdfBlob = new Blob([buf], { type: "application/pdf" });
+      nextOpenUrl = URL.createObjectURL(pdfBlob);
+      setOpenUrl(nextOpenUrl);
+      setPdfBytes(new Uint8Array(buf));
       setBlobLoading(false);
     }
 
@@ -137,7 +143,7 @@ export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSecti
 
     return () => {
       cancelled = true;
-      if (nextUrl) URL.revokeObjectURL(nextUrl);
+      if (nextOpenUrl) URL.revokeObjectURL(nextOpenUrl);
     };
   }, [currentStoragePath, reloadKey]);
 
@@ -262,8 +268,8 @@ export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSecti
                   다시 시도
                 </Button>
               </div>
-            ) : blobUrl ? (
-              <iframe src={blobUrl} className="w-full h-full" title={currentMaterial?.file_name ?? "lecture material"} />
+            ) : pdfBytes ? (
+              <PdfCanvasViewer pdfData={pdfBytes} fileName={currentMaterial?.file_name} openUrl={openUrl} />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
                 <p className="text-muted-foreground">강의 자료를 선택하세요.</p>
