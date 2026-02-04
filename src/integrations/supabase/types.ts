@@ -146,6 +146,50 @@ export type Database = {
           },
         ]
       }
+      lecture_materials: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_url: string
+          id: string
+          is_published: boolean
+          lecture_id: string
+          order_index: number
+          speaker_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_url: string
+          id?: string
+          is_published?: boolean
+          lecture_id: string
+          order_index?: number
+          speaker_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_url?: string
+          id?: string
+          is_published?: boolean
+          lecture_id?: string
+          order_index?: number
+          speaker_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lecture_materials_lecture_id_fkey"
+            columns: ["lecture_id"]
+            isOneToOne: false
+            referencedRelation: "lectures"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lecture_notes: {
         Row: {
           content: string

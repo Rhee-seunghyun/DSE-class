@@ -6,13 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, ChevronDown, ChevronUp, Upload, FileText, ClipboardList, BarChart3 } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, ClipboardList, BarChart3, BookOpen } from 'lucide-react';
 import { StudentTable, StudentData } from '@/components/student/StudentTable';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ApplicationFormDialog } from '@/components/forms/ApplicationFormDialog';
 import { ApplicationStatisticsDialog } from '@/components/student/ApplicationStatisticsDialog';
+import { LectureMaterialsDialog } from '@/components/lecture/LectureMaterialsDialog';
 
 export default function MyClass() {
   const {
@@ -26,6 +27,7 @@ export default function MyClass() {
   const [editingStudent, setEditingStudent] = useState<StudentData | null>(null);
   const [isApplicationFormDialogOpen, setIsApplicationFormDialogOpen] = useState(false);
   const [isStatisticsDialogOpen, setIsStatisticsDialogOpen] = useState(false);
+  const [isMaterialsDialogOpen, setIsMaterialsDialogOpen] = useState(false);
 
   // Form states for creating class
   const [newClassTitle, setNewClassTitle] = useState('');
@@ -178,41 +180,6 @@ export default function MyClass() {
     }
   });
 
-  // Upload lecture file mutation
-  const uploadFileMutation = useMutation({
-    mutationFn: async (file: File) => {
-      if (!selectedLectureId || !profile?.user_id) throw new Error('강의를 선택해주세요.');
-      
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${profile.user_id}/${selectedLectureId}/${Date.now()}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('lecture-files')
-        .upload(filePath, file);
-      
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('lecture-files')
-        .getPublicUrl(filePath);
-
-      const { error: updateError } = await supabase
-        .from('lectures')
-        .update({ pdf_url: publicUrl })
-        .eq('id', selectedLectureId);
-
-      if (updateError) throw updateError;
-      return publicUrl;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-classes'] });
-      toast.success('강의자료가 업로드되었습니다.');
-    },
-    onError: error => {
-      toast.error('업로드 실패: ' + error.message);
-    }
-  });
-
   const handleEditStudent = (student: StudentData) => {
     setEditingStudent(student);
     setEditStudentName(student.student_name || '');
@@ -246,13 +213,6 @@ export default function MyClass() {
     } else {
       queryClient.invalidateQueries({ queryKey: ['lecture-students'] });
       toast.success('메모가 저장되었습니다.');
-    }
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      uploadFileMutation.mutate(file);
     }
   };
 
@@ -342,28 +302,15 @@ export default function MyClass() {
                     <ClipboardList className="w-4 h-4" />
                     세미나 신청서
                   </Button>
-                  <label>
-                    <input
-                      type="file"
-                      accept=".pdf,.ppt,.pptx,.doc,.docx"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
-                    <Button size="sm" variant="outline" className="gap-1" asChild disabled={uploadFileMutation.isPending}>
-                      <span>
-                        <Upload className="w-4 h-4" />
-                        {uploadFileMutation.isPending ? '업로드 중...' : '강의자료'}
-                      </span>
-                    </Button>
-                  </label>
-                  {selectedLecture.pdf_url && (
-                    <Button size="sm" variant="ghost" className="gap-1" asChild>
-                      <a href={selectedLecture.pdf_url} target="_blank" rel="noopener noreferrer">
-                        <FileText className="w-4 h-4" />
-                        보기
-                      </a>
-                    </Button>
-                  )}
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="gap-1"
+                    onClick={() => setIsMaterialsDialogOpen(true)}
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    강의자료 관리
+                  </Button>
                 </div>
               </div>
             </CardHeader>
@@ -436,6 +383,17 @@ export default function MyClass() {
             open={isStatisticsDialogOpen}
             onOpenChange={setIsStatisticsDialogOpen}
             lectureId={selectedLecture.id}
+          />
+        )}
+
+        {/* Lecture Materials Dialog */}
+        {selectedLecture && profile?.user_id && (
+          <LectureMaterialsDialog
+            open={isMaterialsDialogOpen}
+            onOpenChange={setIsMaterialsDialogOpen}
+            lectureId={selectedLecture.id}
+            speakerId={profile.user_id}
+            lectureTitle={selectedLecture.title}
           />
         )}
       </div>
