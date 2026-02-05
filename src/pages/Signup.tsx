@@ -73,13 +73,10 @@ export default function Signup() {
      }
      
      // Check if email is in whitelist
-     const { data: whitelistEntry, error: whitelistError } = await supabase
-       .from('whitelist')
-       .select('*')
-       .eq('email', email.toLowerCase())
-       .maybeSingle();
+      const { data: whitelistCheck, error: whitelistError } = await supabase
+        .rpc('check_whitelist_email', { _email: email.toLowerCase() });
  
-     if (!whitelistError && whitelistEntry) {
+      if (!whitelistError && whitelistCheck && whitelistCheck.length > 0) {
        // Email is in whitelist - proceed with student signup
        await proceedWithSignup(false);
      } else {
