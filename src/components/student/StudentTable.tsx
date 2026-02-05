@@ -16,7 +16,8 @@ import {
   Phone,
   GripVertical,
   Eye,
-  MessageSquare
+   MessageSquare,
+   Download
 } from 'lucide-react';
 import {
   Popover,
@@ -36,6 +37,7 @@ import {
 import { StatusMultiSelect } from './StatusMultiSelect';
 import { ApplicationDetailDialog } from './ApplicationDetailDialog';
 import { maskEmail, maskLicenseNumber, maskPhoneNumber } from '@/lib/dataMasking';
+ import * as XLSX from 'xlsx';
 
 export interface StudentData {
   id: string;
@@ -410,6 +412,36 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange, onM
     setEditingMemoId(null);
     setMemoValue('');
   };
+ 
+   const handleExcelDownload = () => {
+     const excelData = filteredAndSortedStudents.map((student) => ({
+       'No': getRowNumber(student.id),
+       '신/재': student.is_new_student !== false ? '신규' : '재수강',
+       '승인': student.is_registered ? '승인' : '대기',
+       '이름': student.student_name || '',
+       '면허번호': student.license_number || '',
+       '이메일': student.email,
+       '연락처': student.phone_number || '',
+       '입금': student.payment_confirmed ? 'O' : '',
+       '사업자': student.business_registration ? 'O' : '',
+       '계산서': student.invoice_issued ? 'O' : '',
+       '설문': student.survey_completed ? 'O' : '',
+       '수료증': student.certificate_sent ? 'O' : '',
+       '메모': student.admin_memo || '',
+     }));
+ 
+     const worksheet = XLSX.utils.json_to_sheet(excelData);
+     const workbook = XLSX.utils.book_new();
+     XLSX.utils.book_append_sheet(workbook, worksheet, '수강생 목록');
+ 
+     const colWidths = Object.keys(excelData[0] || {}).map(key => ({
+       wch: Math.max(key.length * 2, 10)
+     }));
+     worksheet['!cols'] = colWidths;
+ 
+     const fileName = `수강생목록_${new Date().toISOString().split('T')[0]}.xlsx`;
+     XLSX.writeFile(workbook, fileName);
+   };
 
   return (
     <>
@@ -630,6 +662,20 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange, onM
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+       
+       {/* Excel Download Button */}
+       <div className="flex justify-end mt-4">
+         <Button
+           variant="outline"
+           size="sm"
+           className="gap-2"
+           onClick={handleExcelDownload}
+           disabled={filteredAndSortedStudents.length === 0}
+         >
+           <Download className="w-4 h-4" />
+           엑셀 다운로드
+         </Button>
+       </div>
     </>
   );
 }
