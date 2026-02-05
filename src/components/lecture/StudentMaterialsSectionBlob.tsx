@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 import { DrawingCanvas, DrawAction } from "./DrawingCanvas";
 import { PdfCanvasViewer } from "./PdfCanvasViewer";
+import { QuestionDialog } from "./QuestionDialog";
 
 interface LectureMaterial {
   id: string;
@@ -20,6 +21,7 @@ interface LectureMaterial {
 
 interface StudentMaterialsSectionBlobProps {
   lectureId: string;
+  lectureTitle?: string;
 }
 
 function extractStoragePath(fileUrl: string): string | null {
@@ -46,7 +48,7 @@ function extractStoragePath(fileUrl: string): string | null {
   return null;
 }
 
-export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSectionBlobProps) {
+export function StudentMaterialsSectionBlob({ lectureId, lectureTitle }: StudentMaterialsSectionBlobProps) {
   const [selectedMaterialIndex, setSelectedMaterialIndex] = useState(0);
   const [showDrawingTools, setShowDrawingTools] = useState(false);
   const [pdfPage, setPdfPage] = useState(1);
@@ -224,13 +226,15 @@ export function StudentMaterialsSectionBlob({ lectureId }: StudentMaterialsSecti
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between p-4 border-b">
+      <div className="flex items-center justify-between p-2 sm:p-4 border-b flex-wrap gap-2">
         <div className="flex items-center gap-2">
-          <FileText className="w-5 h-5" />
-          <span className="font-semibold">강의 자료</span>
+          <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span className="font-semibold text-sm sm:text-base">강의 자료</span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* 질문하기 버튼 */}
+          <QuestionDialog lectureId={lectureId} lectureTitle={lectureTitle || '강의'} />
           <Button
             variant={showDrawingTools ? "secondary" : "outline"}
             size="sm"

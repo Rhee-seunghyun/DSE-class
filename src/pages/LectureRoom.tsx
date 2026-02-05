@@ -166,7 +166,7 @@ export default function LectureRoom() {
           <ResizablePanelGroup direction={isMobile ? "vertical" : "horizontal"} className="h-full rounded-lg border">
             {/* PDF Viewer Panel */}
             <ResizablePanel defaultSize={isMobile ? 60 : 65} minSize={30}>
-              <StudentMaterialsSectionBlob lectureId={id!} />
+              <StudentMaterialsSectionBlob lectureId={id!} lectureTitle={lecture.title} />
             </ResizablePanel>
             
             <ResizableHandle withHandle />
