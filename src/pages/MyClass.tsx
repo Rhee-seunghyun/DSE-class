@@ -250,9 +250,9 @@ export default function MyClass() {
   return <DashboardLayout>
       <div className="space-y-6 animate-fade-in">
         {/* Page Header */}
-        <div className="flex items-center justify-between">
+         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-semibold text-foreground">My class</h1>
+             <h1 className="text-2xl sm:text-3xl font-semibold text-foreground">My class</h1>
             {role === 'staff' && (
               <Badge variant="secondary" className="text-sm">담당 클래스</Badge>
             )}
@@ -315,52 +315,52 @@ export default function MyClass() {
         {/* Selected Class Detail */}
         {selectedLecture && <Card className="bg-card">
             <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
+               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
                 <Button
                   variant="secondary"
-                  className="gap-2 font-medium"
+                   className="gap-2 font-medium w-full lg:w-auto justify-start"
                   onClick={() => setIsTableVisible(!isTableVisible)}
                 >
                   {selectedLecture.description?.split('/')[0]?.trim() || '날짜 미정'} {selectedLecture.title}
                   {isTableVisible ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </Button>
-                <div className="flex gap-2">
+                 <div className="flex flex-wrap gap-2">
                   <Button 
                     size="sm" 
                     variant="outline" 
-                    className="gap-1"
+                     className="gap-1 flex-1 sm:flex-none"
                     onClick={() => setIsStatisticsDialogOpen(true)}
                   >
                     <BarChart3 className="w-4 h-4" />
-                    신청서 통계
+                     <span className="hidden sm:inline">신청서 </span>통계
                   </Button>
                   <Button 
                     size="sm" 
                     variant="outline" 
-                    className="gap-1"
+                     className="gap-1 flex-1 sm:flex-none"
                     onClick={() => setIsApplicationFormDialogOpen(true)}
                   >
                     <ClipboardList className="w-4 h-4" />
-                    세미나 신청서
+                     <span className="hidden sm:inline">세미나 </span>신청서
                   </Button>
                   <Button 
                     size="sm" 
                     variant="outline" 
-                    className="gap-1"
+                     className="gap-1 flex-1 sm:flex-none"
                     onClick={() => setIsMaterialsDialogOpen(true)}
                   >
                     <BookOpen className="w-4 h-4" />
-                    강의자료 관리
+                     <span className="hidden sm:inline">강의자료 </span>관리
                   </Button>
                   {role === 'master' && (
                     <Button 
                       size="sm" 
                       variant="outline" 
-                      className="gap-1"
+                       className="gap-1 flex-1 sm:flex-none"
                       onClick={() => setIsStaffAssignmentDialogOpen(true)}
                     >
                       <UserCog className="w-4 h-4" />
-                      Staff 관리
+                       <span className="hidden sm:inline">Staff </span>관리
                     </Button>
                   )}
                 </div>
