@@ -14,8 +14,9 @@ import { toast } from 'sonner';
 import { ApplicationFormDialog } from '@/components/forms/ApplicationFormDialog';
 import { ApplicationStatisticsDialog } from '@/components/student/ApplicationStatisticsDialog';
 import { LectureMaterialsDialog } from '@/components/lecture/LectureMaterialsDialog';
+import { QuestionsManageDialog } from '@/components/lecture/QuestionsManageDialog';
 import { StaffAssignmentDialog } from '@/components/class/StaffAssignmentDialog';
-import { UserCog } from 'lucide-react';
+import { UserCog, MessageSquare } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 export default function MyClass() {
@@ -343,6 +344,11 @@ export default function MyClass() {
                     <ClipboardList className="w-4 h-4" />
                      <span className="hidden sm:inline">세미나 </span>신청서
                   </Button>
+                  {/* 질문받기 버튼 */}
+                  <QuestionsManageDialog 
+                    lectureId={selectedLecture.id} 
+                    lectureTitle={selectedLecture.title} 
+                  />
                   <Button 
                     size="sm" 
                     variant="outline" 

@@ -225,6 +225,50 @@ export type Database = {
           },
         ]
       }
+      lecture_questions: {
+        Row: {
+          answered_at: string | null
+          answered_by: string | null
+          created_at: string
+          id: string
+          is_answered: boolean
+          lecture_id: string
+          question_text: string
+          student_id: string
+          student_name: string
+        }
+        Insert: {
+          answered_at?: string | null
+          answered_by?: string | null
+          created_at?: string
+          id?: string
+          is_answered?: boolean
+          lecture_id: string
+          question_text: string
+          student_id: string
+          student_name: string
+        }
+        Update: {
+          answered_at?: string | null
+          answered_by?: string | null
+          created_at?: string
+          id?: string
+          is_answered?: boolean
+          lecture_id?: string
+          question_text?: string
+          student_id?: string
+          student_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lecture_questions_lecture_id_fkey"
+            columns: ["lecture_id"]
+            isOneToOne: false
+            referencedRelation: "lectures"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lectures: {
         Row: {
           created_at: string
