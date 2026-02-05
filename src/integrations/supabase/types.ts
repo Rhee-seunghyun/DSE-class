@@ -465,6 +465,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_whitelist_email: {
+        Args: { _email: string }
+        Returns: {
+          exists_in_whitelist: boolean
+          lecture_id: string
+          speaker_id: string
+        }[]
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
