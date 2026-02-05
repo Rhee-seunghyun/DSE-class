@@ -55,6 +55,10 @@
      email: string;
      full_name: string;
    };
+  assignedLectures?: {
+    id: string;
+    title: string;
+  }[];
  }
  
  export default function Staff() {
@@ -83,10 +87,27 @@
            .select('email, full_name')
            .eq('user_id', role.user_id)
            .single();
+        
+        // 해당 Staff가 담당하는 강의 목록 조회
+        const { data: assignments } = await supabase
+          .from('staff_lecture_assignments')
+          .select('lecture_id')
+          .eq('staff_user_id', role.user_id);
+        
+        let assignedLectures: { id: string; title: string }[] = [];
+        if (assignments && assignments.length > 0) {
+          const lectureIds = assignments.map((a) => a.lecture_id);
+          const { data: lectures } = await supabase
+            .from('lectures')
+            .select('id, title')
+            .in('id', lectureIds);
+          assignedLectures = lectures || [];
+        }
          
          staffWithProfiles.push({
            ...role,
            profile: profile || undefined,
+          assignedLectures,
          });
        }
  
@@ -310,6 +331,7 @@
                      <TableHead>이름</TableHead>
                      <TableHead>권한</TableHead>
                      <TableHead>부여일</TableHead>
+                  <TableHead>담당 class</TableHead>
                      <TableHead className="w-[80px]"></TableHead>
                    </TableRow>
                  </TableHeader>
@@ -327,6 +349,19 @@
                        <TableCell>
                          {new Date(item.created_at).toLocaleDateString('ko-KR')}
                        </TableCell>
+                      <TableCell>
+                        {item.assignedLectures && item.assignedLectures.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {item.assignedLectures.map((lecture) => (
+                              <Badge key={lecture.id} variant="outline" className="text-xs">
+                                {lecture.title}
+                              </Badge>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">-</span>
+                        )}
+                      </TableCell>
                        <TableCell>
                          <Button
                            variant="ghost"

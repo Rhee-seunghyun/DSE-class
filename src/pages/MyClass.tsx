@@ -14,11 +14,11 @@ import { toast } from 'sonner';
 import { ApplicationFormDialog } from '@/components/forms/ApplicationFormDialog';
 import { ApplicationStatisticsDialog } from '@/components/student/ApplicationStatisticsDialog';
 import { LectureMaterialsDialog } from '@/components/lecture/LectureMaterialsDialog';
+import { StaffAssignmentDialog } from '@/components/class/StaffAssignmentDialog';
+import { UserCog } from 'lucide-react';
 
 export default function MyClass() {
-  const {
-    profile
-  } = useAuth();
+  const { profile, role } = useAuth();
   const queryClient = useQueryClient();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditStudentDialogOpen, setIsEditStudentDialogOpen] = useState(false);
@@ -28,6 +28,7 @@ export default function MyClass() {
   const [isApplicationFormDialogOpen, setIsApplicationFormDialogOpen] = useState(false);
   const [isStatisticsDialogOpen, setIsStatisticsDialogOpen] = useState(false);
   const [isMaterialsDialogOpen, setIsMaterialsDialogOpen] = useState(false);
+  const [isStaffAssignmentDialogOpen, setIsStaffAssignmentDialogOpen] = useState(false);
 
   // Form states for creating class
   const [newClassTitle, setNewClassTitle] = useState('');
@@ -311,6 +312,17 @@ export default function MyClass() {
                     <BookOpen className="w-4 h-4" />
                     강의자료 관리
                   </Button>
+                  {role === 'master' && (
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="gap-1"
+                      onClick={() => setIsStaffAssignmentDialogOpen(true)}
+                    >
+                      <UserCog className="w-4 h-4" />
+                      Staff 관리
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardHeader>
@@ -393,6 +405,16 @@ export default function MyClass() {
             onOpenChange={setIsMaterialsDialogOpen}
             lectureId={selectedLecture.id}
             speakerId={profile.user_id}
+            lectureTitle={selectedLecture.title}
+          />
+        )}
+
+        {/* Staff Assignment Dialog */}
+        {selectedLecture && role === 'master' && (
+          <StaffAssignmentDialog
+            open={isStaffAssignmentDialogOpen}
+            onOpenChange={setIsStaffAssignmentDialogOpen}
+            lectureId={selectedLecture.id}
             lectureTitle={selectedLecture.title}
           />
         )}
