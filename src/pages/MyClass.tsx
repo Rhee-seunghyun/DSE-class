@@ -16,6 +16,7 @@ import { ApplicationStatisticsDialog } from '@/components/student/ApplicationSta
 import { LectureMaterialsDialog } from '@/components/lecture/LectureMaterialsDialog';
 import { StaffAssignmentDialog } from '@/components/class/StaffAssignmentDialog';
 import { UserCog } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 export default function MyClass() {
   const { profile, role } = useAuth();
@@ -41,22 +42,47 @@ export default function MyClass() {
   const [editStudentLicense, setEditStudentLicense] = useState('');
   const [editStudentPhone, setEditStudentPhone] = useState('');
 
-  // Fetch lectures created by current user (speaker/master)
+  // Fetch lectures based on role
+  // - For speaker/master: lectures they created
+  // - For staff: lectures assigned to them
   const {
     data: lectures,
     isLoading: lecturesLoading
   } = useQuery({
-    queryKey: ['my-classes', profile?.id],
+    queryKey: ['my-classes', profile?.user_id, role],
     queryFn: async () => {
       if (!profile?.user_id) return [];
-      const {
-        data,
-        error
-      } = await supabase.from('lectures').select('*').eq('speaker_id', profile.user_id).order('created_at', {
-        ascending: false
-      });
-      if (error) throw error;
-      return data || [];
+      
+      if (role === 'staff') {
+        // For staff: get assigned lectures
+        const { data: assignments, error: assignError } = await supabase
+          .from('staff_lecture_assignments')
+          .select('lecture_id')
+          .eq('staff_user_id', profile.user_id);
+        
+        if (assignError) throw assignError;
+        if (!assignments || assignments.length === 0) return [];
+        
+        const lectureIds = assignments.map(a => a.lecture_id);
+        const { data, error } = await supabase
+          .from('lectures')
+          .select('*')
+          .in('id', lectureIds)
+          .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        return data || [];
+      } else {
+        // For speaker/master: lectures they created
+        const { data, error } = await supabase
+          .from('lectures')
+          .select('*')
+          .eq('speaker_id', profile.user_id)
+          .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        return data || [];
+      }
     },
     enabled: !!profile?.user_id
   });
@@ -222,54 +248,65 @@ export default function MyClass() {
       <div className="space-y-6 animate-fade-in">
         {/* Page Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-semibold text-foreground">My class</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-semibold text-foreground">My class</h1>
+            {role === 'staff' && (
+              <Badge variant="secondary" className="text-sm">담당 클래스</Badge>
+            )}
+          </div>
         </div>
 
         {/* Create Class Button */}
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="w-4 h-4" />
-              class
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>새 클래스 만들기</DialogTitle>
-              <DialogDescription>
-                새로운 강의 클래스를 생성합니다.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">강의 제목</Label>
-                <Input id="title" value={newClassTitle} onChange={e => setNewClassTitle(e.target.value)} placeholder="예: 응급강의" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="date">수강 날짜</Label>
-                <Input id="date" type="date" value={newClassDate} onChange={e => setNewClassDate(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="capacity">수강 인원</Label>
-                <Input id="capacity" type="number" value={newClassCapacity} onChange={e => setNewClassCapacity(e.target.value)} placeholder="예: 30" />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                취소
+        {role !== 'staff' && (
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Plus className="w-4 h-4" />
+                class
               </Button>
-              <Button onClick={() => createClassMutation.mutate()} disabled={!newClassTitle || !newClassDate || !newClassCapacity || createClassMutation.isPending}>
-                {createClassMutation.isPending ? '생성 중...' : '생성하기'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>새 클래스 만들기</DialogTitle>
+                <DialogDescription>
+                  새로운 강의 클래스를 생성합니다.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="title">강의 제목</Label>
+                  <Input id="title" value={newClassTitle} onChange={e => setNewClassTitle(e.target.value)} placeholder="예: 응급강의" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="date">수강 날짜</Label>
+                  <Input id="date" type="date" value={newClassDate} onChange={e => setNewClassDate(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="capacity">수강 인원</Label>
+                  <Input id="capacity" type="number" value={newClassCapacity} onChange={e => setNewClassCapacity(e.target.value)} placeholder="예: 30" />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                  취소
+                </Button>
+                <Button onClick={() => createClassMutation.mutate()} disabled={!newClassTitle || !newClassDate || !newClassCapacity || createClassMutation.isPending}>
+                  {createClassMutation.isPending ? '생성 중...' : '생성하기'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
 
         {/* Class List */}
         {lecturesLoading ? (
           <div className="text-muted-foreground">로딩 중...</div>
         ) : !lectures || lectures.length === 0 ? (
-          <p className="text-muted-foreground">생성된 클래스가 없습니다. + class 버튼을 눌러 새 클래스를 만드세요.</p>
+          <p className="text-muted-foreground">
+            {role === 'staff' 
+              ? '담당 클래스가 없습니다. 관리자에게 클래스 배정을 요청하세요.'
+              : '생성된 클래스가 없습니다. + class 버튼을 눌러 새 클래스를 만드세요.'}
+          </p>
         ) : null}
 
         {/* Selected Class Detail */}
