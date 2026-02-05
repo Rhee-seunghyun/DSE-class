@@ -104,9 +104,12 @@ export default function MyClass() {
       const {
         data,
         error
-      } = await supabase.from('whitelist').select('*').eq('lecture_id', selectedLectureId).order('created_at', {
-        ascending: true
-      });
+      } = await supabase
+        .from('whitelist')
+        .select('*')
+        .eq('lecture_id', selectedLectureId)
+        .order('created_at', { ascending: true })
+        .limit(200); // Limit bulk queries to prevent data harvesting
       if (error) throw error;
       return data || [];
     },
