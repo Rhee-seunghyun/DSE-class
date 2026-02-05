@@ -33,11 +33,11 @@ const Index = () => {
 
       <main>
         {/* Hero */}
-        <section className="py-24 lg:py-32">
-          <div className="container text-center">
+        <section className="py-12 sm:py-24 lg:py-32">
+          <div className="container text-center px-4">
             <div className="animate-fade-in">
               <Logo size="lg" className="mb-8" />
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
+              <p className="text-base sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
                 전문 강연자를 위한 보안 강의 플랫폼.<br />
                 강력한 콘텐츠 보호와 편리한 학습 관리를 경험하세요.
               </p>
@@ -54,11 +54,11 @@ const Index = () => {
         </section>
 
         {/* Features */}
-        <section className="py-24 bg-surface-light">
-          <div className="container">
-            <h2 className="text-3xl font-bold text-center mb-12">주요 기능</h2>
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="bg-card rounded-xl p-8 shadow-sm border border-border animate-fade-in">
+        <section className="py-12 sm:py-24 bg-surface-light">
+          <div className="container px-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-12">주요 기능</h2>
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-8">
+              <div className="bg-card rounded-xl p-6 sm:p-8 shadow-sm border border-border animate-fade-in">
                 <div className="w-12 h-12 rounded-lg bg-accent flex items-center justify-center mb-6">
                   <Shield className="w-6 h-6 text-primary" />
                 </div>
@@ -68,7 +68,7 @@ const Index = () => {
                 </p>
               </div>
 
-              <div className="bg-card rounded-xl p-8 shadow-sm border border-border animate-fade-in" style={{ animationDelay: '0.1s' }}>
+              <div className="bg-card rounded-xl p-6 sm:p-8 shadow-sm border border-border animate-fade-in" style={{ animationDelay: '0.1s' }}>
                 <div className="w-12 h-12 rounded-lg bg-accent flex items-center justify-center mb-6">
                   <BookOpen className="w-6 h-6 text-primary" />
                 </div>
@@ -78,7 +78,7 @@ const Index = () => {
                 </p>
               </div>
 
-              <div className="bg-card rounded-xl p-8 shadow-sm border border-border animate-fade-in" style={{ animationDelay: '0.2s' }}>
+              <div className="bg-card rounded-xl p-6 sm:p-8 shadow-sm border border-border animate-fade-in" style={{ animationDelay: '0.2s' }}>
                 <div className="w-12 h-12 rounded-lg bg-accent flex items-center justify-center mb-6">
                   <Users className="w-6 h-6 text-primary" />
                 </div>
@@ -92,9 +92,9 @@ const Index = () => {
         </section>
 
         {/* CTA */}
-        <section className="py-24">
-          <div className="container text-center">
-            <h2 className="text-3xl font-bold mb-4">지금 시작하세요</h2>
+        <section className="py-12 sm:py-24">
+          <div className="container text-center px-4">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-4">지금 시작하세요</h2>
             <p className="text-muted-foreground mb-8">
               초대받은 이메일로 로그인하여 강의에 참여하세요.
             </p>

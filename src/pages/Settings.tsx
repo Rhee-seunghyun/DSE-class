@@ -102,18 +102,20 @@
  
    return (
      <DashboardLayout>
-       <div className="max-w-2xl">
-         <h1 className="text-3xl font-bold mb-8">설정</h1>
+      <div className="max-w-2xl mx-auto sm:mx-0">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">설정</h1>
          
          <Tabs defaultValue="profile" className="space-y-6">
-           <TabsList>
-             <TabsTrigger value="profile" className="gap-2">
+          <TabsList className="w-full sm:w-auto grid grid-cols-2 sm:flex">
+            <TabsTrigger value="profile" className="gap-2 text-xs sm:text-sm">
                <User className="w-4 h-4" />
-               프로필 관리
+              <span className="hidden sm:inline">프로필 관리</span>
+              <span className="sm:hidden">프로필</span>
              </TabsTrigger>
-             <TabsTrigger value="account" className="gap-2">
+            <TabsTrigger value="account" className="gap-2 text-xs sm:text-sm">
                <Lock className="w-4 h-4" />
-               계정 관리
+              <span className="hidden sm:inline">계정 관리</span>
+              <span className="sm:hidden">계정</span>
              </TabsTrigger>
            </TabsList>
            

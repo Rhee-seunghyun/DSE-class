@@ -20,6 +20,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Select,
   SelectContent,
@@ -56,6 +57,7 @@ export default function Whitelist() {
   const [newEmail, setNewEmail] = useState('');
   const [newName, setNewName] = useState('');
   const [newLicense, setNewLicense] = useState('');
+  const isMobile = useIsMobile();
 
   const { data: lectures } = useQuery({
     queryKey: ['speaker-lectures-select', user?.id],
@@ -165,16 +167,16 @@ export default function Whitelist() {
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-fade-in">
-        <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">수강생 관리</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground">수강생 관리</h1>
             <p className="text-muted-foreground mt-1">
               강의별 수강생을 등록하고 관리하세요.
             </p>
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button disabled={!selectedLecture}>
+                <Button disabled={!selectedLecture} className="w-full sm:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 수강생 등록
               </Button>
@@ -286,6 +288,52 @@ export default function Whitelist() {
                 ))}
               </div>
             ) : filteredWhitelist && filteredWhitelist.length > 0 ? (
+              isMobile ? (
+                <div className="space-y-3">
+                  {filteredWhitelist.map((item) => (
+                    <div key={item.id} className="p-4 border rounded-lg space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="font-medium">{item.student_name || item.email}</p>
+                          <p className="text-sm text-muted-foreground">{item.email}</p>
+                          {item.license_number && (
+                            <p className="text-xs text-muted-foreground">면허: {item.license_number}</p>
+                          )}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => deleteMutation.mutate(item.id)}
+                          disabled={deleteMutation.isPending}
+                        >
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        {item.is_registered ? (
+                          <Badge variant="default" className="gap-1">
+                            <UserCheck className="w-3 h-3" />
+                            가입완료
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="gap-1">
+                            <UserX className="w-3 h-3" />
+                            미가입
+                          </Badge>
+                        )}
+                        <span className="text-muted-foreground">
+                          {new Date(item.created_at).toLocaleDateString('ko-KR')}
+                        </span>
+                      </div>
+                      {!selectedLecture && (
+                        <p className="text-xs text-muted-foreground">
+                          강의: {getLectureName(item.lecture_id)}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -337,6 +385,7 @@ export default function Whitelist() {
                   ))}
                 </TableBody>
               </Table>
+              )
             ) : (
               <div className="flex flex-col items-center justify-center py-12">
                 <Users className="w-12 h-12 text-muted-foreground mb-4" />

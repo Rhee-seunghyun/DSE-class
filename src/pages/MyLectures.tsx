@@ -48,22 +48,22 @@ export default function MyLectures() {
       <div className="space-y-6 animate-fade-in">
         {/* My class 박스 */}
         <Card className="border-2">
-          <CardHeader className="pb-4">
-            <div className="flex items-center gap-3">
+          <CardHeader className="pb-4 px-4 sm:px-6">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
               <div className="p-2 bg-primary/10 rounded-lg">
                 <BookOpen className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <CardTitle className="text-2xl">My class</CardTitle>
+                <CardTitle className="text-xl sm:text-2xl">My class</CardTitle>
                 <CardDescription>
                   승인된 강의 목록입니다. 강의를 클릭하여 자료를 확인하세요.
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-4 sm:px-6">
             {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="p-4 border rounded-lg">
                     <Skeleton className="h-5 w-3/4 mb-2" />
@@ -72,7 +72,7 @@ export default function MyLectures() {
                 ))}
               </div>
             ) : lectures && lectures.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {lectures.map((lecture) => (
                   <Link 
                     key={lecture.id} 

@@ -143,14 +143,14 @@ export default function Signup() {
    };
 
   return (
-    <div className="h-screen overflow-hidden flex">
+    <div className="min-h-screen overflow-auto flex flex-col lg:flex-row">
       {/* Left side - Signup Form */}
-      <div className="w-1/2 flex flex-col justify-center px-16 xl:px-24" style={{ backgroundColor: '#ffffff' }}>
-        <div className="w-full max-w-md">
-          <h1 className="text-6xl font-light tracking-tight text-foreground mb-2" style={{ fontFamily: 'system-ui, sans-serif' }}>
+      <div className="flex-1 lg:w-1/2 flex flex-col justify-center px-6 sm:px-12 lg:px-16 xl:px-24 py-8 lg:py-0" style={{ backgroundColor: '#ffffff' }}>
+        <div className="w-full max-w-md mx-auto lg:mx-0">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight text-foreground mb-2" style={{ fontFamily: 'system-ui, sans-serif' }}>
             Sign up
           </h1>
-          <p className="text-foreground text-base mb-12">
+          <p className="text-foreground text-base mb-6 lg:mb-12">
             사전 등록된 이메일로만 가입이 가능합니다
           </p>
 
@@ -251,7 +251,7 @@ export default function Signup() {
       </div>
 
       {/* Right side - Logo */}
-      <div className="hidden lg:flex w-1/2 items-center justify-center" style={{ backgroundColor: '#f1f1f1' }}>
+      <div className="hidden lg:flex lg:w-1/2 items-center justify-center min-h-screen" style={{ backgroundColor: '#f1f1f1' }}>
         <img
           src={doableLogo}
           alt="DoABLE"

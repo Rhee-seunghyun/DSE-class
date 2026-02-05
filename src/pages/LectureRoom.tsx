@@ -1,3 +1,4 @@
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -21,6 +22,7 @@ export default function LectureRoom() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [notes, setNotes] = useState('');
+  const isMobile = useIsMobile();
 
   const { data: lecture, isLoading: lectureLoading } = useQuery({
     queryKey: ['lecture', id],
@@ -147,13 +149,13 @@ export default function LectureRoom() {
     <DashboardLayout>
       <div className="h-[calc(100vh-120px)] flex flex-col animate-fade-in">
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-start sm:items-center justify-between mb-4 gap-2">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => navigate('/my-lectures')}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">{lecture.title}</h1>
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-2xl font-bold text-foreground truncate">{lecture.title}</h1>
               <p className="text-muted-foreground">{lecture.description}</p>
             </div>
           </div>
@@ -161,21 +163,21 @@ export default function LectureRoom() {
 
         {/* Resizable Panels */}
         <div className="flex-1 min-h-0">
-          <ResizablePanelGroup direction="horizontal" className="h-full rounded-lg border">
+          <ResizablePanelGroup direction={isMobile ? "vertical" : "horizontal"} className="h-full rounded-lg border">
             {/* PDF Viewer Panel */}
-            <ResizablePanel defaultSize={65} minSize={30}>
+            <ResizablePanel defaultSize={isMobile ? 60 : 65} minSize={30}>
               <StudentMaterialsSectionBlob lectureId={id!} />
             </ResizablePanel>
             
             <ResizableHandle withHandle />
             
             {/* Notes Panel */}
-            <ResizablePanel defaultSize={35} minSize={20}>
+            <ResizablePanel defaultSize={isMobile ? 40 : 35} minSize={20}>
               <div className="h-full flex flex-col">
-                <div className="flex items-center justify-between p-4 border-b">
+                <div className="flex items-center justify-between p-2 sm:p-4 border-b">
                   <div className="flex items-center gap-2">
-                    <FileText className="w-5 h-5" />
-                    <span className="font-semibold">내 노트</span>
+                    <FileText className="w-4 sm:w-5 h-4 sm:h-5" />
+                    <span className="font-semibold text-sm sm:text-base">내 노트</span>
                   </div>
                   <Button 
                     size="sm" 
@@ -187,10 +189,10 @@ export default function LectureRoom() {
                     ) : (
                       <Save className="w-4 h-4 mr-2" />
                     )}
-                    저장
+                    <span className="hidden sm:inline">저장</span>
                   </Button>
                 </div>
-                <div className="flex-1 p-4">
+                <div className="flex-1 p-2 sm:p-4">
                   {noteLoading ? (
                     <Skeleton className="h-full w-full" />
                   ) : (
@@ -198,7 +200,7 @@ export default function LectureRoom() {
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       placeholder="강의를 들으며 메모를 작성하세요..."
-                      className="h-full resize-none"
+                      className="h-full resize-none text-sm sm:text-base"
                     />
                   )}
                 </div>
