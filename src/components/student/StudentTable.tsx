@@ -38,6 +38,8 @@ import { StatusMultiSelect } from './StatusMultiSelect';
 import { ApplicationDetailDialog } from './ApplicationDetailDialog';
 import { maskEmail, maskLicenseNumber, maskPhoneNumber } from '@/lib/dataMasking';
  import * as XLSX from 'xlsx';
+ import { useIsMobile } from '@/hooks/use-mobile';
+ import { StudentCard } from './StudentCard';
 
 export interface StudentData {
   id: string;
@@ -113,6 +115,7 @@ const getStatusLabel = (isNew: boolean, isRegistered: boolean) => {
 };
 
 export function StudentTable({ students, onEdit, onDelete, onCheckboxChange, onMemoChange }: StudentTableProps) {
+   const isMobile = useIsMobile();
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
   const [filters, setFilters] = useState<ColumnFilter>({});
@@ -445,6 +448,31 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange, onM
 
   return (
     <>
+       {isMobile ? (
+         /* Mobile Card View */
+         <div className="space-y-2">
+           {filteredAndSortedStudents.length > 0 ? (
+             filteredAndSortedStudents.map((student) => (
+               <StudentCard
+                 key={student.id}
+                 student={student}
+                 rowNumber={getRowNumber(student.id)}
+                 onEdit={onEdit}
+                 onDelete={onDelete}
+                 onViewDetail={setSelectedStudentForDetail}
+                 onApprovalClick={handleApprovalClick}
+                 onStatusChange={handleStatusChange}
+                 onMemoClick={handleMemoClick}
+               />
+             ))
+           ) : (
+             <div className="text-center text-muted-foreground py-8">
+               등록된 수강생이 없습니다.
+             </div>
+           )}
+         </div>
+       ) : (
+         /* Desktop Table View */
       <ScrollArea className="w-full">
         <div className="min-w-max">
           <Table>
@@ -621,6 +649,7 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange, onM
         <ScrollBar orientation="horizontal" />
         <ScrollBar orientation="vertical" />
       </ScrollArea>
+       )}
 
       {/* Application Detail Dialog */}
       <ApplicationDetailDialog
