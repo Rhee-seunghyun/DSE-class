@@ -1,10 +1,13 @@
-import { useState } from 'react';
+ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import doableLogo from '@/assets/doable-logo.png';
 import { EmailVerificationDialog } from '@/components/auth/EmailVerificationDialog';
+ import { RoleSelectionDialog } from '@/components/auth/RoleSelectionDialog';
+ import { PendingApprovalDialog } from '@/components/auth/PendingApprovalDialog';
+ import { StudentApplicationGuideDialog } from '@/components/auth/StudentApplicationGuideDialog';
 
 export default function Signup() {
   const [email, setEmail] = useState('');
@@ -14,70 +17,133 @@ export default function Signup() {
   const [licenseNumber, setLicenseNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+   const [showRoleSelection, setShowRoleSelection] = useState(false);
+   const [showPendingApproval, setShowPendingApproval] = useState(false);
+   const [showStudentGuide, setShowStudentGuide] = useState(false);
+   const [selectedRole, setSelectedRole] = useState<'staff' | 'speaker' | null>(null);
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (password !== confirmPassword) {
+   const validateForm = () => {
+     if (!fullName || !email || !licenseNumber || !password || !confirmPassword) {
       toast({
         variant: 'destructive',
-        title: '비밀번호 불일치',
-        description: '비밀번호가 일치하지 않습니다.',
+         title: '입력 오류',
+         description: '모든 필드를 입력해주세요.',
       });
-      return;
+       return false;
     }
-
-    setIsLoading(true);
-
-    // Master email bypasses whitelist check
-    const MASTER_EMAIL = 'omsrheesh@gmail.com';
-    const isMasterEmail = email.toLowerCase() === MASTER_EMAIL;
     
-    if (!isMasterEmail) {
-      // Check if email is in whitelist
-      const { data: whitelistEntry, error: whitelistError } = await supabase
-        .from('whitelist')
-        .select('*')
-        .eq('email', email.toLowerCase())
-        .maybeSingle();
-
-      if (whitelistError || !whitelistEntry) {
-        toast({
-          variant: 'destructive',
-          title: '가입 불가',
-          description: '사전 등록된 이메일만 가입이 가능합니다. 관리자에게 문의해주세요.',
-        });
-        setIsLoading(false);
-        return;
-      }
+     if (password !== confirmPassword) {
+       toast({
+         variant: 'destructive',
+         title: '비밀번호 불일치',
+         description: '비밀번호가 일치하지 않습니다.',
+       });
+       return false;
     }
+     
+     if (password.length < 6) {
+       toast({
+         variant: 'destructive',
+         title: '비밀번호 오류',
+         description: '비밀번호는 6자 이상이어야 합니다.',
+       });
+       return false;
+     }
+     
+     return true;
+   };
 
-    const { error } = await signUp(email, password, fullName, licenseNumber || undefined);
+   const handleSubmit = async (e: React.FormEvent) => {
+     e.preventDefault();
+     
+     if (!validateForm()) return;
 
-    if (error) {
-      toast({
-        variant: 'destructive',
-        title: '회원가입 실패',
-        description: error.message || '회원가입 중 오류가 발생했습니다.',
-      });
-    } else {
-      // Update whitelist to mark as registered (only for non-master accounts)
-      if (!isMasterEmail) {
-        await supabase
-          .from('whitelist')
-          .update({ is_registered: true })
-          .eq('email', email.toLowerCase());
-      }
+     setIsLoading(true);
 
-      // Show email verification dialog instead of toast
-      setShowVerificationDialog(true);
+     // Master email bypasses whitelist check
+     const MASTER_EMAIL = 'omsrheesh@gmail.com';
+     const isMasterEmail = email.toLowerCase() === MASTER_EMAIL;
+     
+     if (isMasterEmail) {
+       await proceedWithSignup(true);
+       return;
+     }
+     
+     // Check if email is in whitelist
+     const { data: whitelistEntry, error: whitelistError } = await supabase
+       .from('whitelist')
+       .select('*')
+       .eq('email', email.toLowerCase())
+       .maybeSingle();
+ 
+     if (!whitelistError && whitelistEntry) {
+       // Email is in whitelist - proceed with student signup
+       await proceedWithSignup(false);
+     } else {
+       // Email not in whitelist - show role selection
+       setIsLoading(false);
+       setShowRoleSelection(true);
     }
+   };
+ 
+   const proceedWithSignup = async (isMasterEmail: boolean) => {
+     const { error } = await signUp(email, password, fullName, licenseNumber || undefined);
 
+     if (error) {
+       toast({
+         variant: 'destructive',
+         title: '회원가입 실패',
+         description: error.message || '회원가입 중 오류가 발생했습니다.',
+       });
+       setIsLoading(false);
+       return;
+     }
+     
+     // Update whitelist to mark as registered (only for whitelisted accounts)
+     if (!isMasterEmail) {
+       await supabase
+         .from('whitelist')
+         .update({ is_registered: true })
+         .eq('email', email.toLowerCase());
+     }
+ 
+     // Show email verification dialog
+     setShowVerificationDialog(true);
     setIsLoading(false);
   };
+ 
+   const handleRoleSelect = async (role: 'student' | 'staff' | 'speaker') => {
+     setShowRoleSelection(false);
+     
+     if (role === 'student') {
+       // Student needs to apply through application form
+       setShowStudentGuide(true);
+       return;
+     }
+     
+     // Staff or Speaker - proceed with signup (pending approval)
+     setSelectedRole(role);
+     setIsLoading(true);
+     
+     const { error } = await signUp(email, password, fullName, licenseNumber || undefined);
+ 
+     if (error) {
+       toast({
+         variant: 'destructive',
+         title: '회원가입 실패',
+         description: error.message || '회원가입 중 오류가 발생했습니다.',
+       });
+       setIsLoading(false);
+       return;
+     }
+     
+     // Show pending approval dialog
+     setShowPendingApproval(true);
+     setIsLoading(false);
+   };
 
   return (
     <div className="h-screen overflow-hidden flex">
@@ -206,6 +272,31 @@ export default function Signup() {
           navigate('/login');
         }}
       />
+       
+       <RoleSelectionDialog
+         open={showRoleSelection}
+         onSelect={handleRoleSelect}
+         onClose={() => setShowRoleSelection(false)}
+       />
+       
+       {selectedRole && (
+         <PendingApprovalDialog
+           open={showPendingApproval}
+           role={selectedRole}
+           onConfirm={() => {
+             setShowPendingApproval(false);
+             navigate('/login');
+           }}
+         />
+       )}
+       
+       <StudentApplicationGuideDialog
+         open={showStudentGuide}
+         onConfirm={() => {
+           setShowStudentGuide(false);
+           navigate('/login');
+         }}
+       />
     </div>
   );
 }
