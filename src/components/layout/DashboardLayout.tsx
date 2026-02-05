@@ -7,7 +7,8 @@ import {
   LogOut,
   Presentation,
    Mic,
-   UserCog
+    UserCog,
+    Settings
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import doableLogo from '@/assets/doable-logo-new.png';
@@ -50,7 +51,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       href: '/my-lectures', 
       label: 'My class', 
       icon: BookOpen,
-     roles: ['student']
+       roles: ['student']
+     },
+     { 
+       href: '/settings', 
+       label: '설정', 
+       icon: Settings,
+       roles: ['master', 'speaker', 'student', 'staff']
     },
   ];
 

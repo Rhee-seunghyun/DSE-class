@@ -17,6 +17,7 @@ import LectureEdit from "./pages/LectureEdit";
 import Whitelist from "./pages/Whitelist";
 import Speakers from "./pages/Speakers";
  import Staff from "./pages/Staff";
+ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -101,6 +102,14 @@ const App = () => (
                element={
                  <ProtectedRoute allowedRoles={['master']}>
                    <Staff />
+                 </ProtectedRoute>
+               } 
+             />
+             <Route 
+               path="/settings" 
+               element={
+                 <ProtectedRoute>
+                   <Settings />
                  </ProtectedRoute>
                } 
              />
