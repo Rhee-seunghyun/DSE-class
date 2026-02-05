@@ -24,6 +24,10 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   }
 
   if (allowedRoles && role && !allowedRoles.includes(role)) {
+     // staff has same access as master
+     if (role === 'staff' && allowedRoles.includes('master')) {
+       return <>{children}</>;
+     }
     return <Navigate to="/dashboard" replace />;
   }
 

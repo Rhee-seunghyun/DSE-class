@@ -4,10 +4,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { 
   BookOpen, 
-  Users, 
   LogOut,
   Presentation,
-  Mic
+   Mic,
+   UserCog
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import doableLogo from '@/assets/doable-logo-new.png';
@@ -40,16 +40,27 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       icon: Mic,
       roles: ['master'] 
     },
+     { 
+       href: '/staff', 
+       label: 'Staff 관리', 
+       icon: UserCog,
+       roles: ['master'] 
+     },
     { 
       href: '/my-lectures', 
       label: 'My class', 
       icon: BookOpen,
-      roles: ['student'] 
+     roles: ['student']
     },
   ];
 
   const filteredNavItems = navItems.filter(
-    item => role && item.roles.includes(role)
+     item => {
+       if (!role) return false;
+       // staff has same access as master for navigation
+       const effectiveRole = role === 'staff' ? 'master' : role;
+       return item.roles.includes(effectiveRole) || item.roles.includes(role);
+     }
   );
 
   return (

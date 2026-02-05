@@ -16,6 +16,7 @@ import Lectures from "./pages/Lectures";
 import LectureEdit from "./pages/LectureEdit";
 import Whitelist from "./pages/Whitelist";
 import Speakers from "./pages/Speakers";
+ import Staff from "./pages/Staff";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -95,6 +96,14 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
+             <Route 
+               path="/staff" 
+               element={
+                 <ProtectedRoute allowedRoles={['master']}>
+                   <Staff />
+                 </ProtectedRoute>
+               } 
+             />
             <Route path="/apply/:formId" element={<Apply />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
