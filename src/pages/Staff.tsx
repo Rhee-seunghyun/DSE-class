@@ -18,6 +18,7 @@
  import { Skeleton } from '@/components/ui/skeleton';
  import { useToast } from '@/hooks/use-toast';
  import { useState } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
  import {
    Dialog,
    DialogContent,
@@ -68,6 +69,7 @@
    const [dialogOpen, setDialogOpen] = useState(false);
    const [deleteId, setDeleteId] = useState<string | null>(null);
    const [newEmail, setNewEmail] = useState('');
+  const isMobile = useIsMobile();
  
    // Staff 목록 조회
    const { data: staffList, isLoading } = useQuery({
@@ -235,16 +237,16 @@
    return (
      <DashboardLayout>
        <div className="space-y-6 animate-fade-in">
-         <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
            <div>
-             <h1 className="text-3xl font-bold text-foreground">스태프 관리</h1>
-             <p className="text-muted-foreground mt-1">
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground">스태프 관리</h1>
+              <p className="text-sm sm:text-base text-muted-foreground mt-1">
                스태프 권한을 부여하고 관리하세요. 스태프는 마스터와 동일한 권한을 가집니다.
              </p>
            </div>
            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
              <DialogTrigger asChild>
-               <Button>
+                <Button className="w-full sm:w-auto">
                  <Plus className="w-4 h-4 mr-2" />
                  스태프 권한 부여
                </Button>
@@ -323,7 +325,46 @@
                    <Skeleton key={i} className="h-12 w-full" />
                  ))}
                </div>
-             ) : filteredStaff && filteredStaff.length > 0 ? (
+            ) : filteredStaff && filteredStaff.length > 0 ? (
+              isMobile ? (
+                <div className="space-y-3">
+                  {filteredStaff.map((item) => (
+                    <div key={item.id} className="p-4 border rounded-lg space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="font-medium">{item.profile?.full_name || '-'}</p>
+                          <p className="text-sm text-muted-foreground">{item.profile?.email || '-'}</p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setDeleteId(item.id)}
+                        >
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <Badge variant="default" className="gap-1">
+                          <UserCog className="w-3 h-3" />
+                          스태프
+                        </Badge>
+                        <span className="text-muted-foreground">
+                          {new Date(item.created_at).toLocaleDateString('ko-KR')}
+                        </span>
+                      </div>
+                      {item.assignedLectures && item.assignedLectures.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {item.assignedLectures.map((lecture) => (
+                            <Badge key={lecture.id} variant="outline" className="text-xs">
+                              {lecture.title}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
                <Table>
                  <TableHeader>
                    <TableRow>
@@ -375,6 +416,7 @@
                    ))}
                  </TableBody>
                </Table>
+              )
              ) : (
                <div className="flex flex-col items-center justify-center py-12">
                  <Users className="w-12 h-12 text-muted-foreground mb-4" />

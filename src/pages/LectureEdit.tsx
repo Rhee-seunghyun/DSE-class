@@ -175,12 +175,12 @@ export default function LectureEdit() {
     <DashboardLayout>
       <div className="space-y-6 animate-fade-in">
         {/* Header */}
-        <div className="flex items-center gap-4">
+          <div className="flex items-start sm:items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate('/lectures')}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground">
               {isNew ? '새 강의 만들기' : '강의 편집'}
             </h1>
             <p className="text-muted-foreground">
@@ -189,7 +189,7 @@ export default function LectureEdit() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>기본 정보</CardTitle>
@@ -297,15 +297,16 @@ export default function LectureEdit() {
             </CardContent>
           </Card>
 
-          <div className="flex justify-end gap-4">
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => navigate('/lectures')}
+                className="w-full sm:w-auto"
             >
               취소
             </Button>
-            <Button type="submit" disabled={saveMutation.isPending}>
+              <Button type="submit" disabled={saveMutation.isPending} className="w-full sm:w-auto">
               {saveMutation.isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />

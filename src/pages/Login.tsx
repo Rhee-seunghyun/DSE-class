@@ -36,14 +36,14 @@ export default function Login() {
   };
 
   return (
-    <div className="h-screen overflow-hidden flex">
+    <div className="min-h-screen overflow-hidden flex flex-col lg:flex-row">
       {/* Left side - Login Form */}
-      <div className="w-1/2 flex flex-col justify-center px-16 xl:px-24" style={{ backgroundColor: '#ffffff' }}>
-        <div className="w-full max-w-md">
-          <h1 className="text-6xl font-light tracking-tight text-foreground mb-2" style={{ fontFamily: 'system-ui, sans-serif' }}>
+      <div className="flex-1 lg:w-1/2 flex flex-col justify-center px-6 sm:px-12 lg:px-16 xl:px-24 py-8 lg:py-0" style={{ backgroundColor: '#ffffff' }}>
+        <div className="w-full max-w-md mx-auto lg:mx-0">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight text-foreground mb-2" style={{ fontFamily: 'system-ui, sans-serif' }}>
             Welcome
           </h1>
-          <p className="text-foreground text-base mb-16">
+          <p className="text-foreground text-base mb-8 lg:mb-16">
             Please enter your details
           </p>
 
@@ -117,7 +117,7 @@ export default function Login() {
       </div>
 
       {/* Right side - Logo */}
-      <div className="hidden lg:flex w-1/2 items-center justify-center" style={{ backgroundColor: '#f1f1f1' }}>
+      <div className="hidden lg:flex lg:w-1/2 items-center justify-center" style={{ backgroundColor: '#f1f1f1' }}>
         <img
           src={doableLogo}
           alt="DoABLE"

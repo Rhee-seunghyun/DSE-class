@@ -1,3 +1,4 @@
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/useAuth';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -40,6 +41,7 @@ export default function Lectures() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const isMobile = useIsMobile();
 
   const { data: lectures, isLoading } = useQuery({
     queryKey: ['speaker-lectures', user?.id],
@@ -103,15 +105,15 @@ export default function Lectures() {
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-fade-in">
-        <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">강의 관리</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground">강의 관리</h1>
             <p className="text-muted-foreground mt-1">
               강의를 생성하고 관리하세요.
             </p>
           </div>
           <Link to="/lectures/new">
-            <Button>
+              <Button className="w-full sm:w-auto">
               <Plus className="w-4 h-4 mr-2" />
               새 강의 만들기
             </Button>
