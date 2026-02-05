@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { StatusMultiSelect } from './StatusMultiSelect';
 import { ApplicationDetailDialog } from './ApplicationDetailDialog';
+import { maskEmail, maskLicenseNumber, maskPhoneNumber } from '@/lib/dataMasking';
 
 export interface StudentData {
   id: string;
@@ -483,9 +484,9 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange, onM
                       </Button>
                     </TableCell>
                     <TableCell style={{ width: columnWidths.student_name }} className="text-sm truncate">{student.student_name || '-'}</TableCell>
-                    <TableCell style={{ width: columnWidths.license_number }} className="text-sm truncate">{student.license_number || '-'}</TableCell>
-                    <TableCell style={{ width: columnWidths.email }} className="text-sm truncate">{student.email || '-'}</TableCell>
-                    <TableCell style={{ width: columnWidths.phone_number }} className="text-sm truncate">{student.phone_number || '-'}</TableCell>
+                    <TableCell style={{ width: columnWidths.license_number }} className="text-sm truncate" title="상세보기에서 전체 정보 확인">{maskLicenseNumber(student.license_number) || '-'}</TableCell>
+                    <TableCell style={{ width: columnWidths.email }} className="text-sm truncate" title="상세보기에서 전체 정보 확인">{maskEmail(student.email) || '-'}</TableCell>
+                    <TableCell style={{ width: columnWidths.phone_number }} className="text-sm truncate" title="상세보기에서 전체 정보 확인">{maskPhoneNumber(student.phone_number) || '-'}</TableCell>
                     <TableCell style={{ width: columnWidths.status_flags }} className="text-center">
                       <StatusMultiSelect
                         paymentConfirmed={student.payment_confirmed}
