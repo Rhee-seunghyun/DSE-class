@@ -3,11 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import doableLogo from '@/assets/doable-logo.png';
+ import { FindIdDialog } from '@/components/auth/FindIdDialog';
+ import { FindPasswordDialog } from '@/components/auth/FindPasswordDialog';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+   const [showFindId, setShowFindId] = useState(false);
+   const [showFindPassword, setShowFindPassword] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -72,7 +76,24 @@ export default function Login() {
               />
             </div>
 
-            <div className="pt-12 space-y-3">
+            <div className="flex justify-end gap-4 text-sm">
+               <button
+                 type="button"
+                 onClick={() => setShowFindId(true)}
+                 className="text-muted-foreground hover:text-foreground transition-colors"
+               >
+                 아이디 찾기
+               </button>
+               <button
+                 type="button"
+                 onClick={() => setShowFindPassword(true)}
+                 className="text-muted-foreground hover:text-foreground transition-colors"
+               >
+                 비밀번호 찾기
+               </button>
+             </div>
+ 
+             <div className="pt-8 space-y-3">
               <button
                 type="submit"
                 disabled={isLoading}
@@ -104,6 +125,9 @@ export default function Login() {
           draggable={false}
         />
       </div>
+ 
+       <FindIdDialog open={showFindId} onOpenChange={setShowFindId} />
+       <FindPasswordDialog open={showFindPassword} onOpenChange={setShowFindPassword} />
     </div>
   );
 }
