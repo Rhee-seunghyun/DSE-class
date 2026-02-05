@@ -233,8 +233,9 @@ export function StudentMaterialsSectionBlob({ lectureId, lectureTitle }: Student
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {/* 질문하기 버튼 */}
+          {/* 질문하기 버튼 - 필기하기 버튼 왼쪽에 배치 */}
           <QuestionDialog lectureId={lectureId} lectureTitle={lectureTitle || '강의'} />
+          
           <Button
             variant={showDrawingTools ? "secondary" : "outline"}
             size="sm"
