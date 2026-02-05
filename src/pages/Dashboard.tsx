@@ -11,7 +11,7 @@ export default function Dashboard() {
 
   // Redirect master/speaker to my-class, student to my-lectures
   useEffect(() => {
-    if (role === 'master' || role === 'speaker') {
+     if (role === 'master' || role === 'staff' || role === 'speaker') {
       navigate('/my-class', { replace: true });
     } else if (role === 'student') {
       navigate('/my-lectures', { replace: true });
@@ -21,6 +21,7 @@ export default function Dashboard() {
   const getRoleLabel = (role: string | null) => {
     switch (role) {
       case 'master': return '관리자';
+       case 'staff': return '스태프';
       case 'speaker': return '연자';
       case 'student': return '수강생';
       default: return '미정';
