@@ -332,6 +332,38 @@ export type Database = {
           },
         ]
       }
+      staff_lecture_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by: string
+          id: string
+          lecture_id: string
+          staff_user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by: string
+          id?: string
+          lecture_id: string
+          staff_user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string
+          id?: string
+          lecture_id?: string
+          staff_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_lecture_assignments_lecture_id_fkey"
+            columns: ["lecture_id"]
+            isOneToOne: false
+            referencedRelation: "lectures"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
