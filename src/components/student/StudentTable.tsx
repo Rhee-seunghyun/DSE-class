@@ -40,6 +40,8 @@ import { maskEmail, maskLicenseNumber, maskPhoneNumber } from '@/lib/dataMasking
  import * as XLSX from 'xlsx';
  import { useIsMobile } from '@/hooks/use-mobile';
  import { StudentCard } from './StudentCard';
+ import { supabase } from '@/integrations/supabase/client';
+ import { toast } from 'sonner';
 
 export interface StudentData {
   id: string;
@@ -61,6 +63,7 @@ export interface StudentData {
 
 interface StudentTableProps {
   students: StudentData[];
+  lectureId?: string;
   onEdit: (student: StudentData) => void;
   onDelete: (studentId: string) => void;
   onCheckboxChange: (studentId: string, field: keyof StudentData, value: boolean) => void;
@@ -114,7 +117,7 @@ const getStatusLabel = (isNew: boolean, isRegistered: boolean) => {
   return `${prefix}-${suffix}`;
 };
 
-export function StudentTable({ students, onEdit, onDelete, onCheckboxChange, onMemoChange }: StudentTableProps) {
+export function StudentTable({ students, lectureId, onEdit, onDelete, onCheckboxChange, onMemoChange }: StudentTableProps) {
    const isMobile = useIsMobile();
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
@@ -126,6 +129,9 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange, onM
   const [approvalDialogStudent, setApprovalDialogStudent] = useState<StudentData | null>(null);
   const [editingMemoId, setEditingMemoId] = useState<string | null>(null);
   const [memoValue, setMemoValue] = useState('');
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [downloadPassword, setDownloadPassword] = useState('');
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const handleSort = (field: keyof StudentData) => {
     if (sortField === field) {
@@ -416,34 +422,146 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange, onM
     setMemoValue('');
   };
  
-   const handleExcelDownload = () => {
-     const excelData = filteredAndSortedStudents.map((student) => ({
-       'No': getRowNumber(student.id),
-       '신/재': student.is_new_student !== false ? '신규' : '재수강',
-       '승인': student.is_registered ? '승인' : '대기',
-       '이름': student.student_name || '',
-       '면허번호': student.license_number || '',
-       '이메일': student.email,
-       '연락처': student.phone_number || '',
-       '입금': student.payment_confirmed ? 'O' : '',
-       '사업자': student.business_registration ? 'O' : '',
-       '계산서': student.invoice_issued ? 'O' : '',
-       '설문': student.survey_completed ? 'O' : '',
-       '수료증': student.certificate_sent ? 'O' : '',
-       '메모': student.admin_memo || '',
-     }));
- 
-     const worksheet = XLSX.utils.json_to_sheet(excelData);
-     const workbook = XLSX.utils.book_new();
-     XLSX.utils.book_append_sheet(workbook, worksheet, '수강생 목록');
- 
-     const colWidths = Object.keys(excelData[0] || {}).map(key => ({
-       wch: Math.max(key.length * 2, 10)
-     }));
-     worksheet['!cols'] = colWidths;
- 
-     const fileName = `수강생목록_${new Date().toISOString().split('T')[0]}.xlsx`;
-     XLSX.writeFile(workbook, fileName);
+   const handleExcelDownloadClick = () => {
+     setDownloadPassword('');
+     setIsPasswordDialogOpen(true);
+   };
+
+   const handlePasswordConfirmAndDownload = async () => {
+     if (!downloadPassword) {
+       toast.error('비밀번호를 입력해주세요.');
+       return;
+     }
+
+     setIsDownloading(true);
+     try {
+       // Re-authenticate with password
+       const { data: { user } } = await supabase.auth.getUser();
+       if (!user?.email) throw new Error('사용자 정보를 가져올 수 없습니다.');
+
+       const { error: authError } = await supabase.auth.signInWithPassword({
+         email: user.email,
+         password: downloadPassword,
+       });
+
+       if (authError) {
+         toast.error('비밀번호가 일치하지 않습니다.');
+         return;
+       }
+
+       // Fetch form questions and responses for the lecture
+       let questionColumns: { id: string; text: string }[] = [];
+       const responseMap = new Map<string, Record<string, unknown>>();
+
+       if (lectureId) {
+         // Get application form for this lecture
+         const { data: form } = await supabase
+           .from('application_forms')
+           .select('id')
+           .eq('lecture_id', lectureId)
+           .eq('is_active', true)
+           .maybeSingle();
+
+         if (form) {
+           // Fetch questions
+           const { data: questions } = await supabase
+             .from('form_questions')
+             .select('id, question_text, question_type, order_index')
+             .eq('form_id', form.id)
+             .order('order_index', { ascending: true });
+
+           if (questions) {
+             questionColumns = questions
+               .filter(q => q.question_type !== 'description')
+               .map(q => ({ id: q.id, text: q.question_text }));
+           }
+
+           // Fetch all form responses for this form
+           const formResponseIds = filteredAndSortedStudents
+             .map(s => s.form_response_id)
+             .filter((id): id is string => !!id);
+
+           if (formResponseIds.length > 0) {
+             const { data: responses } = await supabase
+               .from('form_responses')
+               .select('id, answers')
+               .in('id', formResponseIds);
+
+             if (responses) {
+               responses.forEach(r => {
+                 responseMap.set(r.id, r.answers as Record<string, unknown>);
+               });
+             }
+           }
+         }
+       }
+
+       // Build Excel data
+       const excelData = filteredAndSortedStudents.map((student) => {
+         const baseData: Record<string, string | number> = {
+           'No': getRowNumber(student.id),
+           '신/재': student.is_new_student !== false ? '신규' : '재수강',
+           '승인': student.is_registered ? '승인' : '대기',
+           '이름': student.student_name || '',
+           '면허번호': student.license_number || '',
+           '이메일': student.email,
+           '연락처': student.phone_number || '',
+           '입금': student.payment_confirmed ? 'O' : '',
+           '사업자': student.business_registration ? 'O' : '',
+           '계산서': student.invoice_issued ? 'O' : '',
+           '설문': student.survey_completed ? 'O' : '',
+           '수료증': student.certificate_sent ? 'O' : '',
+           '메모': student.admin_memo || '',
+         };
+
+         // Add form response answers
+         if (student.form_response_id && questionColumns.length > 0) {
+           const answers = responseMap.get(student.form_response_id);
+           questionColumns.forEach(q => {
+             const answer = answers?.[q.id];
+             baseData[q.text] = formatAnswerForExcel(answer);
+           });
+         } else {
+           questionColumns.forEach(q => {
+             baseData[q.text] = '';
+           });
+         }
+
+         return baseData;
+       });
+
+       const worksheet = XLSX.utils.json_to_sheet(excelData);
+       const workbook = XLSX.utils.book_new();
+       XLSX.utils.book_append_sheet(workbook, worksheet, '수강생 목록');
+
+       const colWidths = Object.keys(excelData[0] || {}).map(key => ({
+         wch: Math.max(key.length * 2, 10)
+       }));
+       worksheet['!cols'] = colWidths;
+
+       const fileName = `수강생목록_${new Date().toISOString().split('T')[0]}.xlsx`;
+       XLSX.writeFile(workbook, fileName);
+
+       setIsPasswordDialogOpen(false);
+       toast.success('엑셀 파일이 다운로드되었습니다.');
+     } catch (error: any) {
+       toast.error('다운로드 실패: ' + (error.message || '알 수 없는 오류'));
+     } finally {
+       setIsDownloading(false);
+       setDownloadPassword('');
+     }
+   };
+
+   const formatAnswerForExcel = (answer: unknown): string => {
+     if (answer === null || answer === undefined) return '';
+     if (typeof answer === 'object' && answer !== null) {
+       const answerObj = answer as { selected?: string; otherText?: string };
+       if (answerObj.otherText) {
+         return `${answerObj.selected} - ${answerObj.otherText}`;
+       }
+       return answerObj.selected || '';
+     }
+     return String(answer);
    };
 
   return (
@@ -692,13 +810,54 @@ export function StudentTable({ students, onEdit, onDelete, onCheckboxChange, onM
         </AlertDialogContent>
       </AlertDialog>
        
+       {/* Password Confirmation Dialog */}
+       <AlertDialog open={isPasswordDialogOpen} onOpenChange={(open) => {
+         if (!open) {
+           setIsPasswordDialogOpen(false);
+           setDownloadPassword('');
+         }
+       }}>
+         <AlertDialogContent>
+           <AlertDialogHeader>
+             <AlertDialogTitle>비밀번호 확인</AlertDialogTitle>
+             <AlertDialogDescription>
+               개인정보가 포함된 파일을 다운로드하려면 보안을 위해 비밀번호를 다시 입력해주세요.
+             </AlertDialogDescription>
+           </AlertDialogHeader>
+           <div className="py-4">
+             <input
+               type="password"
+               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:text-sm"
+               placeholder="비밀번호를 입력하세요"
+               value={downloadPassword}
+               onChange={(e) => setDownloadPassword(e.target.value)}
+               onKeyDown={(e) => {
+                 if (e.key === 'Enter') handlePasswordConfirmAndDownload();
+               }}
+             />
+           </div>
+           <AlertDialogFooter>
+             <AlertDialogCancel disabled={isDownloading}>취소</AlertDialogCancel>
+             <AlertDialogAction
+               onClick={(e) => {
+                 e.preventDefault();
+                 handlePasswordConfirmAndDownload();
+               }}
+               disabled={!downloadPassword || isDownloading}
+             >
+               {isDownloading ? '다운로드 중...' : '확인 후 다운로드'}
+             </AlertDialogAction>
+           </AlertDialogFooter>
+         </AlertDialogContent>
+       </AlertDialog>
+
        {/* Excel Download Button */}
        <div className="flex justify-end mt-4">
          <Button
            variant="outline"
            size="sm"
            className="gap-2"
-           onClick={handleExcelDownload}
+           onClick={handleExcelDownloadClick}
            disabled={filteredAndSortedStudents.length === 0}
          >
            <Download className="w-4 h-4" />

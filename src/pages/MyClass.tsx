@@ -376,6 +376,7 @@ export default function MyClass() {
               <CardContent>
                 <StudentTable
                   students={(students || []) as StudentData[]}
+                  lectureId={selectedLecture.id}
                   onEdit={handleEditStudent}
                   onDelete={(studentId) => deleteStudentMutation.mutate(studentId)}
                   onCheckboxChange={handleCheckboxChange}
