@@ -128,7 +128,7 @@ const getStatusLabel = (isNew: boolean, isRegistered: boolean) => {
   return `${prefix}-${suffix}`;
 };
 
-export function StudentTable({ students, onEdit, onDelete, onCheckboxChange, onMemoChange }: StudentTableProps) {
+export function StudentTable({ students, lectureId, onEdit, onDelete, onCheckboxChange, onMemoChange }: StudentTableProps) {
    const isMobile = useIsMobile();
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
