@@ -74,6 +74,7 @@ export interface StudentData {
 
 interface StudentTableProps {
   students: StudentData[];
+  lectureId?: string;
   onEdit: (student: StudentData) => void;
   onDelete: (studentId: string) => void;
   onCheckboxChange: (studentId: string, field: keyof StudentData, value: boolean) => void;
