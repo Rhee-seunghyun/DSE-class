@@ -18,8 +18,7 @@ import {
   GripVertical,
   Eye,
    MessageSquare,
-   Download,
-   Lock
+   Download
 } from 'lucide-react';
 import {
   Popover,
