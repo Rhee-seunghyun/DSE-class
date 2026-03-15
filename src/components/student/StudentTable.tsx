@@ -140,6 +140,9 @@ export function StudentTable({ students, lectureId, onEdit, onDelete, onCheckbox
   const [approvalDialogStudent, setApprovalDialogStudent] = useState<StudentData | null>(null);
   const [editingMemoId, setEditingMemoId] = useState<string | null>(null);
   const [memoValue, setMemoValue] = useState('');
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [downloadPassword, setDownloadPassword] = useState('');
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const handleSort = (field: keyof StudentData) => {
     if (sortField === field) {
