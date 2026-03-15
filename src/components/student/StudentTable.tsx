@@ -2,6 +2,8 @@ import { useState, useMemo, useCallback, useRef } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { 
@@ -17,7 +19,8 @@ import {
   GripVertical,
   Eye,
    MessageSquare,
-   Download
+   Download,
+   Lock
 } from 'lucide-react';
 import {
   Popover,
@@ -34,12 +37,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { StatusMultiSelect } from './StatusMultiSelect';
 import { ApplicationDetailDialog } from './ApplicationDetailDialog';
 import { maskEmail, maskLicenseNumber, maskPhoneNumber } from '@/lib/dataMasking';
  import * as XLSX from 'xlsx';
  import { useIsMobile } from '@/hooks/use-mobile';
  import { StudentCard } from './StudentCard';
+ import { supabase } from '@/integrations/supabase/client';
+ import { toast } from 'sonner';
 
 export interface StudentData {
   id: string;
