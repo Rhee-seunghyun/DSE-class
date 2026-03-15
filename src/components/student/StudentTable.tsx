@@ -821,13 +821,54 @@ export function StudentTable({ students, lectureId, onEdit, onDelete, onCheckbox
         </AlertDialogContent>
       </AlertDialog>
        
+       {/* Password Confirmation Dialog */}
+       <AlertDialog open={isPasswordDialogOpen} onOpenChange={(open) => {
+         if (!open) {
+           setIsPasswordDialogOpen(false);
+           setDownloadPassword('');
+         }
+       }}>
+         <AlertDialogContent>
+           <AlertDialogHeader>
+             <AlertDialogTitle>비밀번호 확인</AlertDialogTitle>
+             <AlertDialogDescription>
+               개인정보가 포함된 파일을 다운로드하려면 보안을 위해 비밀번호를 다시 입력해주세요.
+             </AlertDialogDescription>
+           </AlertDialogHeader>
+           <div className="py-4">
+             <input
+               type="password"
+               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:text-sm"
+               placeholder="비밀번호를 입력하세요"
+               value={downloadPassword}
+               onChange={(e) => setDownloadPassword(e.target.value)}
+               onKeyDown={(e) => {
+                 if (e.key === 'Enter') handlePasswordConfirmAndDownload();
+               }}
+             />
+           </div>
+           <AlertDialogFooter>
+             <AlertDialogCancel disabled={isDownloading}>취소</AlertDialogCancel>
+             <AlertDialogAction
+               onClick={(e) => {
+                 e.preventDefault();
+                 handlePasswordConfirmAndDownload();
+               }}
+               disabled={!downloadPassword || isDownloading}
+             >
+               {isDownloading ? '다운로드 중...' : '확인 후 다운로드'}
+             </AlertDialogAction>
+           </AlertDialogFooter>
+         </AlertDialogContent>
+       </AlertDialog>
+
        {/* Excel Download Button */}
        <div className="flex justify-end mt-4">
          <Button
            variant="outline"
            size="sm"
            className="gap-2"
-           onClick={handleExcelDownload}
+           onClick={handleExcelDownloadClick}
            disabled={filteredAndSortedStudents.length === 0}
          >
            <Download className="w-4 h-4" />
