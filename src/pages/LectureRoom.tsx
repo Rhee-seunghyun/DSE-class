@@ -22,7 +22,24 @@ export default function LectureRoom() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [notes, setNotes] = useState('');
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const materialRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+
+  const toggleFullscreen = () => {
+    if (!materialRef.current) return;
+    if (!document.fullscreenElement) {
+      materialRef.current.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => {});
+    } else {
+      document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
+    }
+  };
+
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
+  }, []);
 
   const { data: lecture, isLoading: lectureLoading } = useQuery({
     queryKey: ['lecture', id],
