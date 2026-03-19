@@ -5,12 +5,12 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { DynamicWatermark } from "@/components/DynamicWatermark";
 
-// pdfjs-dist types are a bit inconsistent across bundlers; keep imports simple.
-import { GlobalWorkerOptions, getDocument } from "pdfjs-dist";
+// Use legacy build for broader browser compatibility (toHex polyfill etc.)
+import { GlobalWorkerOptions, getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 
-// Vite-friendly worker setup (avoids relying on browser PDF plugins)
+// Vite-friendly worker setup
 GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.mjs",
+  "pdfjs-dist/legacy/build/pdf.worker.mjs",
   import.meta.url,
 ).toString();
 
