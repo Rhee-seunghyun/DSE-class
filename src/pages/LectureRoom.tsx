@@ -182,14 +182,27 @@ export default function LectureRoom() {
         <div className="flex-1 min-h-0">
           <ResizablePanelGroup direction={isMobile ? "vertical" : "horizontal"} className="h-full rounded-lg border">
             {/* PDF Viewer Panel */}
-            <ResizablePanel defaultSize={isMobile ? 60 : 65} minSize={30}>
-              <StudentMaterialsSectionBlob lectureId={id!} lectureTitle={lecture.title} />
+            <ResizablePanel defaultSize={isMobile ? 70 : 75} minSize={30}>
+              <div ref={materialRef} className="h-full bg-background">
+                <div className="h-full relative">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 z-30 h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-background"
+                    onClick={toggleFullscreen}
+                    title={isFullscreen ? "전체화면 종료" : "전체화면"}
+                  >
+                    {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                  </Button>
+                  <StudentMaterialsSectionBlob lectureId={id!} lectureTitle={lecture.title} />
+                </div>
+              </div>
             </ResizablePanel>
             
             <ResizableHandle withHandle />
             
             {/* Notes Panel */}
-            <ResizablePanel defaultSize={isMobile ? 40 : 35} minSize={20}>
+            <ResizablePanel defaultSize={isMobile ? 30 : 25} minSize={15}>
               <div className="h-full flex flex-col">
                 <div className="flex items-center justify-between p-2 sm:p-4 border-b">
                   <div className="flex items-center gap-2">
