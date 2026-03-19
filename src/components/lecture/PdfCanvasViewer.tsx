@@ -93,13 +93,26 @@ export function PdfCanvasViewer({ pdfData, className, onPageChange, showWatermar
     };
   }, [docTask]);
 
+  const renderTaskRef = useRef<any>(null);
+
   useEffect(() => {
     let cancelled = false;
+
+    // Cancel any in-progress render before starting a new one
+    if (renderTaskRef.current) {
+      try {
+        renderTaskRef.current.cancel();
+      } catch {
+        // noop
+      }
+      renderTaskRef.current = null;
+    }
 
     (async () => {
       if (loading || error) return;
       try {
         const doc = await docTask.promise;
+        if (cancelled) return;
         const pdfPage = await doc.getPage(page);
         if (cancelled) return;
 
@@ -121,16 +134,29 @@ export function PdfCanvasViewer({ pdfData, className, onPageChange, showWatermar
         canvas.style.width = "100%";
         canvas.style.height = "auto";
 
-        // Render
-        await pdfPage.render({ canvasContext: ctx, viewport, canvas }).promise;
-      } catch (e) {
+        // Render – store the task so it can be cancelled by the next effect run
+        const task = pdfPage.render({ canvasContext: ctx, viewport, canvas });
+        renderTaskRef.current = task;
+        await task.promise;
+        renderTaskRef.current = null;
+      } catch (e: any) {
         if (cancelled) return;
+        // Ignore cancellation errors (expected when switching pages quickly)
+        if (e?.name === "RenderingCancelledException") return;
         setError(e instanceof Error ? e.message : "PDF 렌더링에 실패했습니다.");
       }
     })();
 
     return () => {
       cancelled = true;
+      if (renderTaskRef.current) {
+        try {
+          renderTaskRef.current.cancel();
+        } catch {
+          // noop
+        }
+        renderTaskRef.current = null;
+      }
     };
   }, [containerSize.height, containerSize.width, docTask, error, loading, page]);
 
