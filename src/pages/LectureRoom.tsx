@@ -184,7 +184,7 @@ export default function LectureRoom() {
           <ResizablePanelGroup direction={isMobile ? "vertical" : "horizontal"} className="h-full rounded-lg border">
             {/* PDF Viewer Panel */}
             <ResizablePanel defaultSize={isMobile ? 70 : 75} minSize={30}>
-              <div ref={materialRef} className="h-full bg-background">
+              <div ref={materialRef} className={cn("h-full bg-background", isMobile && "aspect-video")}>
                 <div className="h-full relative">
                   <Button
                     variant="ghost"

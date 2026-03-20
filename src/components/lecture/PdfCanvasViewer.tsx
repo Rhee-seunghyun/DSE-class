@@ -135,6 +135,8 @@ export function PdfCanvasViewer({ pdfData, className, onPageChange, showWatermar
         canvas.height = Math.floor(viewport.height * dpr);
         canvas.style.width = `${Math.floor(viewport.width)}px`;
         canvas.style.height = `${Math.floor(viewport.height)}px`;
+        canvas.style.maxWidth = "100%";
+        canvas.style.maxHeight = "100%";
         ctx.scale(dpr, dpr);
 
         // Render – store the task so it can be cancelled by the next effect run
