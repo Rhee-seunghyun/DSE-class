@@ -13,7 +13,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useCaptureProtection } from '@/hooks/useCaptureProtection';
 import { StudentMaterialsSectionBlob } from '@/components/lecture/StudentMaterialsSectionBlob';
 import { CaptureWarningDialog } from '@/components/security/CaptureWarningDialog';
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+
 
 export default function LectureRoom() {
   const { id } = useParams<{ id: string }>();
