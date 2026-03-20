@@ -22,6 +22,8 @@ interface LectureMaterial {
 interface StudentMaterialsSectionBlobProps {
   lectureId: string;
   lectureTitle?: string;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
 }
 
 function extractStoragePath(fileUrl: string): string | null {
@@ -48,7 +50,7 @@ function extractStoragePath(fileUrl: string): string | null {
   return null;
 }
 
-export function StudentMaterialsSectionBlob({ lectureId, lectureTitle }: StudentMaterialsSectionBlobProps) {
+export function StudentMaterialsSectionBlob({ lectureId, lectureTitle, isFullscreen, onToggleFullscreen }: StudentMaterialsSectionBlobProps) {
   const [selectedMaterialIndex, setSelectedMaterialIndex] = useState(0);
   const [showDrawingTools, setShowDrawingTools] = useState(false);
   const [pdfPage, setPdfPage] = useState(1);
@@ -297,7 +299,7 @@ export function StudentMaterialsSectionBlob({ lectureId, lectureTitle }: Student
                 </Button>
               </div>
             ) : pdfBytes ? (
-              <PdfCanvasViewer pdfData={pdfBytes} onPageChange={setPdfPage} showWatermark />
+              <PdfCanvasViewer pdfData={pdfBytes} onPageChange={setPdfPage} showWatermark isFullscreen={isFullscreen} onToggleFullscreen={onToggleFullscreen} />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
                 <p className="text-muted-foreground">강의 자료를 선택하세요.</p>

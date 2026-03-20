@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Maximize2, Minimize2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase, logSecurityEvent } from '@/lib/supabase';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -96,20 +96,10 @@ export default function LectureRoom() {
           <h1 className="text-xs sm:text-sm font-semibold text-foreground truncate ml-1">{lecture.title}</h1>
         </div>
 
-        {/* Full-size PDF Viewer – 16:9 aspect maintained inside */}
-        <div className="flex-1 min-h-0 overflow-hidden relative">
+        <div className="flex-1 min-h-0 overflow-hidden">
           <div ref={materialRef} className="h-full bg-background">
-            <StudentMaterialsSectionBlob lectureId={id!} lectureTitle={lecture.title} />
+            <StudentMaterialsSectionBlob lectureId={id!} lectureTitle={lecture.title} isFullscreen={isFullscreen} onToggleFullscreen={toggleFullscreen} />
           </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            className="absolute top-2 left-2 z-10 h-7 px-2 text-xs gap-1 opacity-80 hover:opacity-100"
-            onClick={toggleFullscreen}
-          >
-            {isFullscreen ? <Minimize2 className="w-3 h-3" /> : <Maximize2 className="w-3 h-3" />}
-            {isFullscreen ? "종료" : "전체화면"}
-          </Button>
         </div>
       </div>
 

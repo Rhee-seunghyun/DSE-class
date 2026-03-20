@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Maximize2, Minimize2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -19,9 +19,11 @@ interface PdfCanvasViewerProps {
   className?: string;
   onPageChange?: (page: number) => void;
   showWatermark?: boolean;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
 }
 
-export function PdfCanvasViewer({ pdfData, className, onPageChange, showWatermark = false }: PdfCanvasViewerProps) {
+export function PdfCanvasViewer({ pdfData, className, onPageChange, showWatermark = false, isFullscreen, onToggleFullscreen }: PdfCanvasViewerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<HTMLDivElement>(null);
@@ -171,7 +173,14 @@ export function PdfCanvasViewer({ pdfData, className, onPageChange, showWatermar
   return (
     <div ref={wrapRef} className={cn("h-full w-full flex flex-col", className)}>
       <div className="relative z-20 flex items-center justify-between gap-2 py-2">
-        <div className="min-w-0" />
+        <div className="min-w-0">
+          {onToggleFullscreen && (
+            <Button variant="outline" size="sm" className="h-7 px-2 text-xs gap-1" onClick={onToggleFullscreen}>
+              {isFullscreen ? <Minimize2 className="w-3 h-3" /> : <Maximize2 className="w-3 h-3" />}
+              {isFullscreen ? "종료" : "전체화면"}
+            </Button>
+          )}
+        </div>
 
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={!canPrev}>
