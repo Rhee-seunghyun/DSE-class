@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
-
+import { savePdfOffline, loadPdfOffline } from "@/lib/offlineStorage";
 import { DrawingCanvas, DrawAction } from "./DrawingCanvas";
 import { PdfCanvasViewer } from "./PdfCanvasViewer";
 import { QuestionDialog } from "./QuestionDialog";
