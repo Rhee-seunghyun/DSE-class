@@ -1,16 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import doableLogo from '@/assets/doable-logo.png';
 import { FindIdDialog } from '@/components/auth/FindIdDialog';
 import { FindPasswordDialog } from '@/components/auth/FindPasswordDialog';
-import { Download } from 'lucide-react';
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-}
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -18,46 +12,9 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [showFindId, setShowFindId] = useState(false);
   const [showFindPassword, setShowFindPassword] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isAppInstalled, setIsAppInstalled] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  useEffect(() => {
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-    };
-
-    const installedHandler = () => {
-      setIsAppInstalled(true);
-      setDeferredPrompt(null);
-    };
-
-    window.addEventListener('beforeinstallprompt', handler);
-    window.addEventListener('appinstalled', installedHandler);
-
-    // Check if already installed (standalone mode)
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      setIsAppInstalled(true);
-    }
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handler);
-      window.removeEventListener('appinstalled', installedHandler);
-    };
-  }, []);
-
-  const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
-    await deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      setDeferredPrompt(null);
-      toast({ title: '앱이 설치되었습니다!', description: '홈 화면에서 DoABLE을 실행할 수 있습니다.' });
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,18 +111,6 @@ export default function Login() {
               >
                 Sign up
               </button>
-
-              {!isAppInstalled && (
-                <button
-                  type="button"
-                  onClick={handleInstallClick}
-                  disabled={!deferredPrompt}
-                  className="w-full h-12 text-base font-medium border border-muted-foreground/30 text-foreground bg-muted/50 hover:bg-muted transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  <Download className="w-5 h-5" />
-                  앱 설치 (오프라인 사용)
-                </button>
-              )}
             </div>
           </form>
         </div>

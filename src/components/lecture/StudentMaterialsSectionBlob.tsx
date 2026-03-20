@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
-import { savePdfOffline, loadPdfOffline } from "@/lib/offlineStorage";
+
 import { DrawingCanvas, DrawAction } from "./DrawingCanvas";
 import { PdfCanvasViewer } from "./PdfCanvasViewer";
 import { QuestionDialog } from "./QuestionDialog";
@@ -154,7 +154,7 @@ export function StudentMaterialsSectionBlob({ lectureId, lectureTitle, isFullscr
     };
   }, []);
 
-  // Download PDF — offline-first with IndexedDB caching
+  // Download PDF from storage
   useEffect(() => {
     let cancelled = false;
 
@@ -167,25 +167,12 @@ export function StudentMaterialsSectionBlob({ lectureId, lectureTitle, isFullscr
 
       setBlobLoading(true);
 
-      // 1. Try IndexedDB cache first
-      try {
-        const cached = await loadPdfOffline(currentMaterial.id);
-        if (cached && !cancelled) {
-          setPdfBytes(cached);
-          setBlobLoading(false);
-          return;
-        }
-      } catch {
-        // IndexedDB unavailable — continue to network
-      }
-
-      // 2. Network download
       const { data, error } = await supabase.storage.from("lecture-files").download(currentStoragePath);
 
       if (cancelled) return;
 
       if (error || !data) {
-        setBlobError(error?.message ?? "파일을 불러오지 못했습니다. 오프라인 상태라면 미리 다운로드가 필요합니다.");
+        setBlobError(error?.message ?? "파일을 불러오지 못했습니다.");
         setBlobLoading(false);
         return;
       }
@@ -194,13 +181,6 @@ export function StudentMaterialsSectionBlob({ lectureId, lectureTitle, isFullscr
       const bytes = new Uint8Array(buf);
       setPdfBytes(bytes);
       setBlobLoading(false);
-
-      // 3. Cache to IndexedDB for offline use
-      try {
-        await savePdfOffline(currentMaterial.id, bytes);
-      } catch {
-        // Storage full or unavailable — silently ignore
-      }
     }
 
     run();
