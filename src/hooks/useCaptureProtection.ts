@@ -66,17 +66,8 @@ export function useCaptureProtection({
       logAttempt('context_menu');
     };
 
-    // Attempt to detect visibility changes (might indicate screenshot)
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        // User might be taking screenshot via OS
-        logAttempt('visibility_hidden');
-      }
-    };
-
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('contextmenu', handleContextMenu);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // Disable text selection and dragging on protected content
     const style = document.createElement('style');
@@ -97,7 +88,7 @@ export function useCaptureProtection({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('contextmenu', handleContextMenu);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      
       const protectionStyle = document.getElementById('capture-protection-styles');
       if (protectionStyle) {
         protectionStyle.remove();
