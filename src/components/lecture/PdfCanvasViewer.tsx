@@ -173,7 +173,14 @@ export function PdfCanvasViewer({ pdfData, className, onPageChange, showWatermar
   return (
     <div ref={wrapRef} className={cn("h-full w-full flex flex-col", className)}>
       <div className="relative z-20 flex items-center justify-between gap-2 py-2">
-        <div className="min-w-0" />
+        <div className="min-w-0">
+          {onToggleFullscreen && (
+            <Button variant="outline" size="sm" className="h-7 px-2 text-xs gap-1" onClick={onToggleFullscreen}>
+              {isFullscreen ? <Minimize2 className="w-3 h-3" /> : <Maximize2 className="w-3 h-3" />}
+              {isFullscreen ? "종료" : "전체화면"}
+            </Button>
+          )}
+        </div>
 
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={!canPrev}>
