@@ -166,78 +166,34 @@ export default function LectureRoom() {
   return (
     <DashboardLayout>
       <div className="h-[calc(100vh-120px)] flex flex-col animate-fade-in">
-        {/* Header */}
-        <div className="flex items-start sm:items-center justify-between mb-4 gap-2">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/my-lectures')}>
-              <ArrowLeft className="w-5 h-5" />
+        {/* Compact Header */}
+        <div className="flex items-center justify-between mb-2 gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => navigate('/my-lectures')}>
+              <ArrowLeft className="w-4 h-4" />
             </Button>
             <div className="min-w-0">
-              <h1 className="text-lg sm:text-2xl font-bold text-foreground truncate">{lecture.title}</h1>
-              <p className="text-muted-foreground">{lecture.description}</p>
+              <h1 className="text-sm sm:text-lg font-bold text-foreground truncate">{lecture.title}</h1>
             </div>
           </div>
         </div>
 
-        {/* Resizable Panels */}
-        <div className="flex-1 min-h-0">
-          <ResizablePanelGroup direction={isMobile ? "vertical" : "horizontal"} className="h-full rounded-lg border">
-            {/* PDF Viewer Panel */}
-            <ResizablePanel defaultSize={isMobile ? 70 : 75} minSize={30}>
-              <div ref={materialRef} className={cn("h-full bg-background", isMobile && "aspect-video")}>
-                <div className="h-full relative">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute top-2 right-2 z-30 h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-background"
-                    onClick={toggleFullscreen}
-                    title={isFullscreen ? "전체화면 종료" : "전체화면"}
-                  >
-                    {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-                  </Button>
-                  <StudentMaterialsSectionBlob lectureId={id!} lectureTitle={lecture.title} />
-                </div>
-              </div>
-            </ResizablePanel>
-            
-            <ResizableHandle withHandle />
-            
-            {/* Notes Panel */}
-            <ResizablePanel defaultSize={isMobile ? 30 : 25} minSize={15}>
-              <div className="h-full flex flex-col">
-                <div className="flex items-center justify-between p-2 sm:p-4 border-b">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 sm:w-5 h-4 sm:h-5" />
-                    <span className="font-semibold text-sm sm:text-base">내 노트</span>
-                  </div>
-                  <Button 
-                    size="sm" 
-                    onClick={handleSaveNotes}
-                    disabled={saveNoteMutation.isPending}
-                  >
-                    {saveNoteMutation.isPending ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <Save className="w-4 h-4 mr-2" />
-                    )}
-                    <span className="hidden sm:inline">저장</span>
-                  </Button>
-                </div>
-                <div className="flex-1 p-2 sm:p-4">
-                  {noteLoading ? (
-                    <Skeleton className="h-full w-full" />
-                  ) : (
-                    <Textarea
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      placeholder="강의를 들으며 메모를 작성하세요..."
-                      className="h-full resize-none text-sm sm:text-base"
-                    />
-                  )}
-                </div>
-              </div>
-            </ResizablePanel>
-          </ResizablePanelGroup>
+        {/* Full-size PDF Viewer */}
+        <div className="flex-1 min-h-0 rounded-lg border overflow-hidden">
+          <div ref={materialRef} className="h-full bg-background">
+            <div className="h-full relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 right-2 z-30 h-7 w-7 bg-background/80 backdrop-blur-sm hover:bg-background"
+                onClick={toggleFullscreen}
+                title={isFullscreen ? "전체화면 종료" : "전체화면"}
+              >
+                {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+              </Button>
+              <StudentMaterialsSectionBlob lectureId={id!} lectureTitle={lecture.title} />
+            </div>
+          </div>
         </div>
       </div>
 
