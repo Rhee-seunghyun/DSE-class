@@ -299,7 +299,7 @@ export function StudentMaterialsSectionBlob({ lectureId, lectureTitle, isFullscr
                 </Button>
               </div>
             ) : pdfBytes ? (
-              <PdfCanvasViewer pdfData={pdfBytes} onPageChange={setPdfPage} showWatermark />
+              <PdfCanvasViewer pdfData={pdfBytes} onPageChange={setPdfPage} showWatermark isFullscreen={isFullscreen} onToggleFullscreen={onToggleFullscreen} />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
                 <p className="text-muted-foreground">강의 자료를 선택하세요.</p>
