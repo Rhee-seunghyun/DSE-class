@@ -192,7 +192,7 @@ export default function MyLectures() {
                       <div className="mt-3 pt-3 border-t flex items-center gap-2">
                         {cached ? (
                           <>
-                            <span className="text-xs text-green-600 flex items-center gap-1">
+                            <span className="text-xs text-primary flex items-center gap-1">
                               <Check className="w-3.5 h-3.5" /> 오프라인 저장됨
                             </span>
                             <Button
