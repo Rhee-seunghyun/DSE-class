@@ -103,10 +103,6 @@ export default function LectureRoom() {
         </div>
       </div>
 
-      <CaptureWarningDialog
-        open={showWarningDialog}
-        onConfirm={dismissWarningDialog}
-      />
     </DashboardLayout>
   );
 }
