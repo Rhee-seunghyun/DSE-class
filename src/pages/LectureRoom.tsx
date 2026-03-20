@@ -47,7 +47,7 @@ export default function LectureRoom() {
     enabled: !!id,
   });
 
-  const { showWarningDialog, dismissWarningDialog } = useCaptureProtection({
+  useCaptureProtection({
     enabled: true,
     lectureId: id,
     lectureTitle: lecture?.title,
@@ -103,10 +103,6 @@ export default function LectureRoom() {
         </div>
       </div>
 
-      <CaptureWarningDialog
-        open={showWarningDialog}
-        onConfirm={dismissWarningDialog}
-      />
     </DashboardLayout>
   );
 }
