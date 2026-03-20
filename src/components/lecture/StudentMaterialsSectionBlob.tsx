@@ -226,52 +226,39 @@ export function StudentMaterialsSectionBlob({ lectureId, lectureTitle }: Student
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between p-2 sm:p-4 border-b flex-wrap gap-2">
-        <div className="flex items-center gap-2">
-          <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="font-semibold text-sm sm:text-base">강의 자료</span>
+      <div className="flex items-center justify-between px-2 py-1.5 border-b gap-1">
+        <div className="flex items-center gap-1.5">
+          <FileText className="w-3.5 h-3.5 text-muted-foreground" />
+          <span className="font-medium text-xs sm:text-sm">강의 자료</span>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* 질문하기 버튼 - 필기하기 버튼 왼쪽에 배치 */}
+        <div className="flex items-center gap-1 flex-wrap">
           <QuestionDialog lectureId={lectureId} lectureTitle={lectureTitle || '강의'} />
           
           <Button
-            variant={showDrawingTools ? "secondary" : "outline"}
+            variant={showDrawingTools ? "secondary" : "ghost"}
             size="sm"
+            className="h-7 px-2 text-xs"
             onClick={() => setShowDrawingTools((v) => !v)}
           >
             {showDrawingTools ? (
-              <>
-                <PencilOff className="w-4 h-4 mr-1" />
-                필기 끄기
-              </>
+              <><PencilOff className="w-3.5 h-3.5 mr-1" />끄기</>
             ) : (
-              <>
-                <Pencil className="w-4 h-4 mr-1" />
-                필기하기
-              </>
+              <><Pencil className="w-3.5 h-3.5 mr-1" />필기</>
             )}
           </Button>
 
           {materials.length > 1 && (
             <>
-              <div className="w-px h-6 bg-border" />
-              <Button variant="outline" size="sm" onClick={goToPrevious} disabled={selectedMaterialIndex === 0}>
-                <ChevronUp className="w-4 h-4 mr-1" />
-                이전
+              <div className="w-px h-5 bg-border" />
+              <Button variant="ghost" size="sm" className="h-7 px-1.5" onClick={goToPrevious} disabled={selectedMaterialIndex === 0}>
+                <ChevronUp className="w-3.5 h-3.5" />
               </Button>
-              <span className="text-sm text-muted-foreground">
-                {selectedMaterialIndex + 1} / {materials.length}
+              <span className="text-xs text-muted-foreground">
+                {selectedMaterialIndex + 1}/{materials.length}
               </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={goToNext}
-                disabled={selectedMaterialIndex === materials.length - 1}
-              >
-                다음
-                <ChevronDown className="w-4 h-4 ml-1" />
+              <Button variant="ghost" size="sm" className="h-7 px-1.5" onClick={goToNext} disabled={selectedMaterialIndex === materials.length - 1}>
+                <ChevronDown className="w-3.5 h-3.5" />
               </Button>
             </>
           )}
@@ -279,11 +266,11 @@ export function StudentMaterialsSectionBlob({ lectureId, lectureTitle }: Student
       </div>
 
       {materials.length > 1 && (
-        <div className="p-2 border-b">
+        <div className="px-2 py-1 border-b">
           <select
             value={selectedMaterialIndex}
             onChange={(e) => setSelectedMaterialIndex(Number(e.target.value))}
-            className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+            className="w-full px-2 py-1 text-xs border rounded bg-background"
           >
             {materials.map((material, index) => (
               <option key={material.id} value={index}>
@@ -294,11 +281,9 @@ export function StudentMaterialsSectionBlob({ lectureId, lectureTitle }: Student
         </div>
       )}
 
-      <div className="flex-1 flex flex-col p-4 overflow-hidden">
-        <div className="flex-1 flex flex-col space-y-2">
-          <div className="text-sm font-medium text-muted-foreground">자료 {selectedMaterialIndex + 1}</div>
-
-          <div ref={containerRef} className="relative flex-1 bg-muted rounded-lg overflow-hidden protected-content">
+      <div className="flex-1 flex flex-col p-1.5 overflow-hidden">
+        <div className="flex-1 flex flex-col">
+          <div ref={containerRef} className="relative flex-1 bg-muted rounded overflow-hidden protected-content">
             {blobLoading ? (
               <div className="absolute inset-0 flex items-center justify-center">
                 <p className="text-muted-foreground">파일을 불러오는 중...</p>
