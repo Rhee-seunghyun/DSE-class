@@ -154,32 +154,53 @@ export function StudentMaterialsSectionBlob({ lectureId, lectureTitle, isFullscr
     };
   }, []);
 
-  // Download PDF as Blob
+  // Download PDF — offline-first with IndexedDB caching
   useEffect(() => {
     let cancelled = false;
 
     async function run() {
-      // cleanup previous
       setBlobError(null);
       setBlobLoading(false);
       setPdfBytes(null);
 
-      if (!currentStoragePath) return;
+      if (!currentStoragePath || !currentMaterial) return;
 
       setBlobLoading(true);
+
+      // 1. Try IndexedDB cache first
+      try {
+        const cached = await loadPdfOffline(currentMaterial.id);
+        if (cached && !cancelled) {
+          setPdfBytes(cached);
+          setBlobLoading(false);
+          return;
+        }
+      } catch {
+        // IndexedDB unavailable — continue to network
+      }
+
+      // 2. Network download
       const { data, error } = await supabase.storage.from("lecture-files").download(currentStoragePath);
 
       if (cancelled) return;
 
       if (error || !data) {
-        setBlobError(error?.message ?? "파일을 불러오지 못했습니다.");
+        setBlobError(error?.message ?? "파일을 불러오지 못했습니다. 오프라인 상태라면 미리 다운로드가 필요합니다.");
         setBlobLoading(false);
         return;
       }
 
       const buf = await data.arrayBuffer();
-      setPdfBytes(new Uint8Array(buf));
+      const bytes = new Uint8Array(buf);
+      setPdfBytes(bytes);
       setBlobLoading(false);
+
+      // 3. Cache to IndexedDB for offline use
+      try {
+        await savePdfOffline(currentMaterial.id, bytes);
+      } catch {
+        // Storage full or unavailable — silently ignore
+      }
     }
 
     run();
@@ -187,7 +208,7 @@ export function StudentMaterialsSectionBlob({ lectureId, lectureTitle, isFullscr
     return () => {
       cancelled = true;
     };
-  }, [currentStoragePath, reloadKey]);
+  }, [currentStoragePath, currentMaterial, reloadKey]);
 
   const goToPrevious = () => {
     if (selectedMaterialIndex > 0) setSelectedMaterialIndex(selectedMaterialIndex - 1);
