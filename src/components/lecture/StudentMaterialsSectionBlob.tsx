@@ -266,11 +266,11 @@ export function StudentMaterialsSectionBlob({ lectureId, lectureTitle }: Student
       </div>
 
       {materials.length > 1 && (
-        <div className="p-2 border-b">
+        <div className="px-2 py-1 border-b">
           <select
             value={selectedMaterialIndex}
             onChange={(e) => setSelectedMaterialIndex(Number(e.target.value))}
-            className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+            className="w-full px-2 py-1 text-xs border rounded bg-background"
           >
             {materials.map((material, index) => (
               <option key={material.id} value={index}>
@@ -281,11 +281,9 @@ export function StudentMaterialsSectionBlob({ lectureId, lectureTitle }: Student
         </div>
       )}
 
-      <div className="flex-1 flex flex-col p-4 overflow-hidden">
-        <div className="flex-1 flex flex-col space-y-2">
-          <div className="text-sm font-medium text-muted-foreground">자료 {selectedMaterialIndex + 1}</div>
-
-          <div ref={containerRef} className="relative flex-1 bg-muted rounded-lg overflow-hidden protected-content">
+      <div className="flex-1 flex flex-col p-1.5 overflow-hidden">
+        <div className="flex-1 flex flex-col">
+          <div ref={containerRef} className="relative flex-1 bg-muted rounded overflow-hidden protected-content">
             {blobLoading ? (
               <div className="absolute inset-0 flex items-center justify-center">
                 <p className="text-muted-foreground">파일을 불러오는 중...</p>
