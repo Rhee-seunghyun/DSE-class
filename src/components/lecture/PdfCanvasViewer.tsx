@@ -19,9 +19,11 @@ interface PdfCanvasViewerProps {
   className?: string;
   onPageChange?: (page: number) => void;
   showWatermark?: boolean;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
 }
 
-export function PdfCanvasViewer({ pdfData, className, onPageChange, showWatermark = false }: PdfCanvasViewerProps) {
+export function PdfCanvasViewer({ pdfData, className, onPageChange, showWatermark = false, isFullscreen, onToggleFullscreen }: PdfCanvasViewerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<HTMLDivElement>(null);
