@@ -88,7 +88,7 @@ export function useCaptureProtection({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('contextmenu', handleContextMenu);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      
       const protectionStyle = document.getElementById('capture-protection-styles');
       if (protectionStyle) {
         protectionStyle.remove();
