@@ -129,10 +129,13 @@ export function PdfCanvasViewer({ pdfData, className, onPageChange, showWatermar
         );
         const viewport = pdfPage.getViewport({ scale });
 
-        canvas.width = Math.floor(viewport.width);
-        canvas.height = Math.floor(viewport.height);
-        canvas.style.width = "100%";
-        canvas.style.height = "auto";
+        // Use devicePixelRatio for crisp rendering on high-DPI screens
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.floor(viewport.width * dpr);
+        canvas.height = Math.floor(viewport.height * dpr);
+        canvas.style.width = `${Math.floor(viewport.width)}px`;
+        canvas.style.height = `${Math.floor(viewport.height)}px`;
+        ctx.scale(dpr, dpr);
 
         // Render – store the task so it can be cancelled by the next effect run
         const task = pdfPage.render({ canvasContext: ctx, viewport, canvas });
