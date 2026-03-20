@@ -155,11 +155,12 @@ export default function Login() {
                 Sign up
               </button>
 
-              {deferredPrompt && !isAppInstalled && (
+              {!isAppInstalled && (
                 <button
                   type="button"
                   onClick={handleInstallClick}
-                  className="w-full h-12 text-base font-medium border border-muted-foreground/30 text-foreground bg-muted/50 hover:bg-muted transition-colors flex items-center justify-center gap-2 rounded"
+                  disabled={!deferredPrompt}
+                  className="w-full h-12 text-base font-medium border border-muted-foreground/30 text-foreground bg-muted/50 hover:bg-muted transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   <Download className="w-5 h-5" />
                   앱 설치 (오프라인 사용)
