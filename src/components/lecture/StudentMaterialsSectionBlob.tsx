@@ -50,7 +50,7 @@ function extractStoragePath(fileUrl: string): string | null {
   return null;
 }
 
-export function StudentMaterialsSectionBlob({ lectureId, lectureTitle }: StudentMaterialsSectionBlobProps) {
+export function StudentMaterialsSectionBlob({ lectureId, lectureTitle, isFullscreen, onToggleFullscreen }: StudentMaterialsSectionBlobProps) {
   const [selectedMaterialIndex, setSelectedMaterialIndex] = useState(0);
   const [showDrawingTools, setShowDrawingTools] = useState(false);
   const [pdfPage, setPdfPage] = useState(1);
