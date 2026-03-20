@@ -87,32 +87,28 @@ export default function LectureRoom() {
 
   return (
     <DashboardLayout>
-      <div className="h-[calc(100vh-120px)] flex flex-col animate-fade-in">
+      <div className="h-[calc(100vh-80px)] flex flex-col animate-fade-in -mx-2 sm:-mx-4">
         {/* Compact Header */}
-        <div className="flex items-center justify-between mb-2 gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => navigate('/my-lectures')}>
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-            <h1 className="text-sm sm:text-lg font-bold text-foreground truncate">{lecture.title}</h1>
-          </div>
+        <div className="flex items-center gap-1 px-2 py-1">
+          <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => navigate('/my-lectures')}>
+            <ArrowLeft className="w-3.5 h-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 shrink-0"
+            onClick={toggleFullscreen}
+            title={isFullscreen ? "전체화면 종료" : "전체화면"}
+          >
+            {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+          </Button>
+          <h1 className="text-xs sm:text-sm font-semibold text-foreground truncate ml-1">{lecture.title}</h1>
         </div>
 
-        {/* Full-size PDF Viewer */}
-        <div className="flex-1 min-h-0 rounded-lg border overflow-hidden">
+        {/* Full-size PDF Viewer – 16:9 aspect maintained inside */}
+        <div className="flex-1 min-h-0 overflow-hidden">
           <div ref={materialRef} className="h-full bg-background">
-            <div className="h-full relative">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-2 right-2 z-30 h-7 w-7 bg-background/80 backdrop-blur-sm hover:bg-background"
-                onClick={toggleFullscreen}
-                title={isFullscreen ? "전체화면 종료" : "전체화면"}
-              >
-                {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
-              </Button>
-              <StudentMaterialsSectionBlob lectureId={id!} lectureTitle={lecture.title} />
-            </div>
+            <StudentMaterialsSectionBlob lectureId={id!} lectureTitle={lecture.title} />
           </div>
         </div>
       </div>
