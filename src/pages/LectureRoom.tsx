@@ -93,23 +93,23 @@ export default function LectureRoom() {
           <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => navigate('/my-lectures')}>
             <ArrowLeft className="w-3.5 h-3.5" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 shrink-0"
-            onClick={toggleFullscreen}
-            title={isFullscreen ? "전체화면 종료" : "전체화면"}
-          >
-            {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
-          </Button>
           <h1 className="text-xs sm:text-sm font-semibold text-foreground truncate ml-1">{lecture.title}</h1>
         </div>
 
         {/* Full-size PDF Viewer – 16:9 aspect maintained inside */}
-        <div className="flex-1 min-h-0 overflow-hidden">
+        <div className="flex-1 min-h-0 overflow-hidden relative">
           <div ref={materialRef} className="h-full bg-background">
             <StudentMaterialsSectionBlob lectureId={id!} lectureTitle={lecture.title} />
           </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="absolute top-2 left-2 z-10 h-7 px-2 text-xs gap-1 opacity-80 hover:opacity-100"
+            onClick={toggleFullscreen}
+          >
+            {isFullscreen ? <Minimize2 className="w-3 h-3" /> : <Maximize2 className="w-3 h-3" />}
+            {isFullscreen ? "종료" : "전체화면"}
+          </Button>
         </div>
       </div>
 
