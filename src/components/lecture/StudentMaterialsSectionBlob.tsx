@@ -22,6 +22,8 @@ interface LectureMaterial {
 interface StudentMaterialsSectionBlobProps {
   lectureId: string;
   lectureTitle?: string;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
 }
 
 function extractStoragePath(fileUrl: string): string | null {
