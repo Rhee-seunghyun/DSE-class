@@ -113,7 +113,7 @@ export function PdfThumbnailPanel({
   return (
     <div className="absolute inset-0 z-20 flex" onClick={onClose}>
       <div
-        className="w-[140px] sm:w-[160px] h-full bg-background/95 backdrop-blur-sm border-r shadow-lg"
+        className="w-[110px] sm:w-[120px] h-full bg-background/95 backdrop-blur-sm border-r shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
         <ScrollArea className="h-full">
