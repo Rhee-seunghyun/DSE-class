@@ -117,7 +117,7 @@ export function PdfThumbnailPanel({
         onClick={(e) => e.stopPropagation()}
       >
         <ScrollArea className="h-full">
-          <div className="p-2 space-y-1">
+          <div className="p-1 space-y-1">
             {Array.from({ length: numPages }, (_, i) => i + 1).map((pageNum) => (
               <div key={pageNum} ref={pageNum === currentPage ? currentRef : undefined}>
                 <ThumbnailItem
