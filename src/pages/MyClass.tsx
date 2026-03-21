@@ -187,12 +187,11 @@ export default function MyClass() {
   const updateStudentMutation = useMutation({
     mutationFn: async () => {
       if (!editingStudent) throw new Error('수정할 수강생을 선택해주세요.');
-      const normalizedEmail = editStudentEmail.trim().toLowerCase();
       const { error } = await supabase
         .from('whitelist')
         .update({
           student_name: editStudentName,
-          email: normalizedEmail,
+          email: editStudentEmail.trim(),
           license_number: editStudentLicense,
           phone_number: editStudentPhone
         })
