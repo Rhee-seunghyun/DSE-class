@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { DynamicWatermark } from "@/components/DynamicWatermark";
+import { PdfThumbnailPanel } from "@/components/lecture/PdfThumbnailPanel";
 
 // Use legacy build for broader browser compatibility (toHex polyfill etc.)
 import { GlobalWorkerOptions, getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
