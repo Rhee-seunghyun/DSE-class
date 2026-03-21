@@ -11,7 +11,7 @@ interface PdfThumbnailPanelProps {
   onClose: () => void;
 }
 
-const THUMB_SCALE = 0.15;
+const THUMB_SCALE = 0.12;
 
 function ThumbnailItem({
   pdfDoc,
