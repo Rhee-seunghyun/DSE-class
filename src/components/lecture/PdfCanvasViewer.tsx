@@ -81,6 +81,7 @@ export function PdfCanvasViewer({ pdfData, className, onPageChange, showWatermar
       try {
         const doc = await docTask.promise;
         if (cancelled) return;
+        pdfDocRef.current = doc;
         setNumPages(doc.numPages);
         setLoading(false);
       } catch (e) {
