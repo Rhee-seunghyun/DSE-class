@@ -11,7 +11,7 @@ interface PdfThumbnailPanelProps {
   onClose: () => void;
 }
 
-const THUMB_SCALE = 0.15;
+const THUMB_SCALE = 0.12;
 
 function ThumbnailItem({
   pdfDoc,
@@ -83,7 +83,7 @@ function ThumbnailItem({
           : "border-transparent hover:border-muted-foreground/30"
       )}
     >
-      <div className="relative bg-muted rounded overflow-hidden min-h-[80px] flex items-center justify-center">
+      <div className="relative bg-muted rounded overflow-hidden min-h-[60px] flex items-center justify-center">
         {!rendered && (
           <Loader2 className="w-4 h-4 animate-spin text-muted-foreground absolute" />
         )}
@@ -113,11 +113,11 @@ export function PdfThumbnailPanel({
   return (
     <div className="absolute inset-0 z-20 flex" onClick={onClose}>
       <div
-        className="w-[140px] sm:w-[160px] h-full bg-background/95 backdrop-blur-sm border-r shadow-lg"
+        className="w-[110px] sm:w-[120px] h-full bg-background/95 backdrop-blur-sm border-r shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
         <ScrollArea className="h-full">
-          <div className="p-2 space-y-1">
+          <div className="p-1 space-y-1">
             {Array.from({ length: numPages }, (_, i) => i + 1).map((pageNum) => (
               <div key={pageNum} ref={pageNum === currentPage ? currentRef : undefined}>
                 <ThumbnailItem
