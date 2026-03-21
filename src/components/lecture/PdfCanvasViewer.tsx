@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Loader2, Maximize2, Minimize2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { ChevronLeft, ChevronRight, Loader2, Maximize2, Minimize2, LayoutGrid } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { DynamicWatermark } from "@/components/DynamicWatermark";
+import { PdfThumbnailPanel } from "@/components/lecture/PdfThumbnailPanel";
 
 // Use legacy build for broader browser compatibility (toHex polyfill etc.)
 import { GlobalWorkerOptions, getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
@@ -32,6 +34,10 @@ export function PdfCanvasViewer({ pdfData, className, onPageChange, showWatermar
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showThumbnails, setShowThumbnails] = useState(false);
+  const [isEditingPage, setIsEditingPage] = useState(false);
+  const [pageInput, setPageInput] = useState("");
+  const pdfDocRef = useRef<any>(null);
 
   const [containerSize, setContainerSize] = useState<{ width: number; height: number }>({ width: 800, height: 600 });
 
@@ -75,6 +81,7 @@ export function PdfCanvasViewer({ pdfData, className, onPageChange, showWatermar
       try {
         const doc = await docTask.promise;
         if (cancelled) return;
+        pdfDocRef.current = doc;
         setNumPages(doc.numPages);
         setLoading(false);
       } catch (e) {
@@ -170,14 +177,33 @@ export function PdfCanvasViewer({ pdfData, className, onPageChange, showWatermar
   const canPrev = page > 1;
   const canNext = numPages > 0 && page < numPages;
 
+  const handlePageInputConfirm = useCallback(() => {
+    const val = parseInt(pageInput, 10);
+    if (!isNaN(val) && numPages > 0) {
+      setPage(Math.max(1, Math.min(numPages, val)));
+    }
+    setIsEditingPage(false);
+  }, [pageInput, numPages]);
+
   return (
     <div ref={wrapRef} className={cn("h-full w-full flex flex-col", className)}>
       <div className="relative z-20 flex items-center justify-between gap-2 py-2">
-        <div className="min-w-0">
+        <div className="flex items-center gap-1 min-w-0">
           {onToggleFullscreen && (
             <Button variant="outline" size="sm" className="h-7 px-2 text-xs gap-1" onClick={onToggleFullscreen}>
               {isFullscreen ? <Minimize2 className="w-3 h-3" /> : <Maximize2 className="w-3 h-3" />}
               {isFullscreen ? "종료" : "전체화면"}
+            </Button>
+          )}
+          {numPages > 0 && !loading && (
+            <Button
+              variant={showThumbnails ? "secondary" : "outline"}
+              size="sm"
+              className="h-7 px-2 text-xs gap-1"
+              onClick={() => setShowThumbnails((v) => !v)}
+            >
+              <LayoutGrid className="w-3 h-3" />
+              목차
             </Button>
           )}
         </div>
@@ -187,9 +213,36 @@ export function PdfCanvasViewer({ pdfData, className, onPageChange, showWatermar
             <ChevronLeft className="w-4 h-4 mr-1" />
             이전
           </Button>
-          <span className="text-sm text-muted-foreground tabular-nums">
-            {numPages ? `${page} / ${numPages}` : "- / -"}
-          </span>
+
+          {isEditingPage ? (
+            <Input
+              autoFocus
+              type="number"
+              min={1}
+              max={numPages}
+              value={pageInput}
+              onChange={(e) => setPageInput(e.target.value)}
+              onBlur={handlePageInputConfirm}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handlePageInputConfirm();
+                if (e.key === "Escape") setIsEditingPage(false);
+              }}
+              className="h-7 w-14 text-center text-xs tabular-nums px-1"
+            />
+          ) : (
+            <button
+              onClick={() => {
+                if (numPages > 0) {
+                  setPageInput(String(page));
+                  setIsEditingPage(true);
+                }
+              }}
+              className="text-sm text-muted-foreground tabular-nums hover:text-foreground hover:underline transition-colors cursor-pointer px-1"
+            >
+              {numPages ? `${page} / ${numPages}` : "- / -"}
+            </button>
+          )}
+
           <Button
             variant="outline"
             size="sm"
@@ -199,12 +252,22 @@ export function PdfCanvasViewer({ pdfData, className, onPageChange, showWatermar
             다음
             <ChevronRight className="w-4 h-4 ml-1" />
           </Button>
-
         </div>
       </div>
 
       <div ref={viewerRef} className="relative z-0 flex-1 min-h-0 bg-muted rounded-lg overflow-hidden">
         {showWatermark && <DynamicWatermark className="absolute inset-0 z-10" />}
+
+        {showThumbnails && pdfDocRef.current && numPages > 0 && (
+          <PdfThumbnailPanel
+            pdfDoc={pdfDocRef.current}
+            numPages={numPages}
+            currentPage={page}
+            onPageSelect={setPage}
+            onClose={() => setShowThumbnails(false)}
+          />
+        )}
+
         {loading ? (
           <div className="absolute inset-0 flex items-center justify-center">
             <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
