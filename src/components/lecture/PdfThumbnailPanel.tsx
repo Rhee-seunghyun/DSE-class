@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -11,7 +11,7 @@ interface PdfThumbnailPanelProps {
   onClose: () => void;
 }
 
-const THUMB_SCALE = 0.12;
+const THUMB_SCALE = 0.16;
 
 function ThumbnailItem({
   pdfDoc,
@@ -44,16 +44,25 @@ function ThumbnailItem({
               const page = await pdfDoc.getPage(pageNum);
               const viewport = page.getViewport({ scale: THUMB_SCALE });
               const canvas = canvasRef.current;
-              if (!canvas) return;
+              const container = containerRef.current;
+              if (!canvas || !container) return;
               const ctx = canvas.getContext("2d");
               if (!ctx) return;
 
               const dpr = Math.min(window.devicePixelRatio || 1, 2);
+              const availableWidth = Math.max(container.clientWidth - 10, 1);
+              const displayScale = Math.min(1, availableWidth / viewport.width);
+              const displayWidth = Math.max(1, Math.floor(viewport.width * displayScale));
+              const displayHeight = Math.max(1, Math.floor(viewport.height * displayScale));
+
               canvas.width = Math.floor(viewport.width * dpr);
               canvas.height = Math.floor(viewport.height * dpr);
-              canvas.style.width = `${Math.floor(viewport.width)}px`;
-              canvas.style.height = `${Math.floor(viewport.height)}px`;
-              ctx.scale(dpr, dpr);
+              canvas.style.width = `${displayWidth}px`;
+              canvas.style.height = `${displayHeight}px`;
+
+              ctx.setTransform(1, 0, 0, 1, 0, 0);
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
               await page.render({ canvasContext: ctx, viewport }).promise;
               setRendered(true);
@@ -77,17 +86,17 @@ function ThumbnailItem({
       ref={containerRef}
       onClick={onSelect}
       className={cn(
-        "cursor-pointer rounded-md border-2 p-1 transition-colors flex flex-col items-center gap-1",
+        "cursor-pointer rounded-md border p-0.5 transition-colors flex flex-col items-center gap-1",
         isCurrent
           ? "border-primary bg-primary/10"
           : "border-transparent hover:border-muted-foreground/30"
       )}
     >
-      <div className="relative bg-muted rounded overflow-hidden min-h-[60px] flex items-center justify-center">
+      <div className="relative w-full bg-muted rounded overflow-hidden min-h-[56px] flex items-center justify-center">
         {!rendered && (
           <Loader2 className="w-4 h-4 animate-spin text-muted-foreground absolute" />
         )}
-        <canvas ref={canvasRef} className="block" />
+        <canvas ref={canvasRef} className="block max-w-full" />
       </div>
       <span className="text-[10px] text-muted-foreground tabular-nums">{pageNum}</span>
     </div>
@@ -104,7 +113,6 @@ export function PdfThumbnailPanel({
   const currentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Scroll current page into view
     setTimeout(() => {
       currentRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
     }, 100);
@@ -113,7 +121,7 @@ export function PdfThumbnailPanel({
   return (
     <div className="absolute inset-0 z-20 flex" onClick={onClose}>
       <div
-        className="w-[110px] sm:w-[120px] h-full bg-background/95 backdrop-blur-sm border-r shadow-lg"
+        className="w-[124px] sm:w-[136px] h-full bg-background/95 backdrop-blur-sm border-r shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
         <ScrollArea className="h-full">
@@ -134,7 +142,6 @@ export function PdfThumbnailPanel({
           </div>
         </ScrollArea>
       </div>
-      {/* Click overlay area to close */}
       <div className="flex-1" />
     </div>
   );
