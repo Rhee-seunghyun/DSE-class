@@ -83,7 +83,7 @@ function ThumbnailItem({
           : "border-transparent hover:border-muted-foreground/30"
       )}
     >
-      <div className="relative bg-muted rounded overflow-hidden min-h-[80px] flex items-center justify-center">
+      <div className="relative bg-muted rounded overflow-hidden min-h-[60px] flex items-center justify-center">
         {!rendered && (
           <Loader2 className="w-4 h-4 animate-spin text-muted-foreground absolute" />
         )}
