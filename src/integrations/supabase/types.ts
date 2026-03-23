@@ -408,6 +408,54 @@ export type Database = {
           },
         ]
       }
+      student_drawings: {
+        Row: {
+          created_at: string
+          drawing_data: Json
+          id: string
+          lecture_id: string
+          material_id: string
+          page_number: number
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          drawing_data?: Json
+          id?: string
+          lecture_id: string
+          material_id: string
+          page_number?: number
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          drawing_data?: Json
+          id?: string
+          lecture_id?: string
+          material_id?: string
+          page_number?: number
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_drawings_lecture_id_fkey"
+            columns: ["lecture_id"]
+            isOneToOne: false
+            referencedRelation: "lectures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_drawings_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "lecture_materials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
