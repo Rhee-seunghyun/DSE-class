@@ -101,13 +101,10 @@ export function StudentMaterialsSectionBlob({ lectureId, lectureTitle, isFullscr
     return drawingsMap[currentDrawingKey] || [];
   }, [drawingsMap, currentDrawingKey]);
 
-  // 필기 변경 시 저장
+  // 필기 변경 시 DB에 저장
   const handleActionsChange = useCallback((actions: DrawAction[]) => {
-    setDrawingsMap(prev => ({
-      ...prev,
-      [currentDrawingKey]: actions,
-    }));
-  }, [currentDrawingKey]);
+    updateDrawings(currentDrawingKey, actions);
+  }, [currentDrawingKey, updateDrawings]);
 
   // Update canvas dimensions when container resizes
   useEffect(() => {
