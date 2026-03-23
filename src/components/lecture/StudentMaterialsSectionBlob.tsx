@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
+import { useDrawingSync } from "@/hooks/useDrawingSync";
 
 import { DrawingCanvas, DrawAction } from "./DrawingCanvas";
 import { PdfCanvasViewer } from "./PdfCanvasViewer";
