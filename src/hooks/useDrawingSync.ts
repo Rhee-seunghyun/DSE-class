@@ -67,15 +67,17 @@ export function useDrawingSync(lectureId: string) {
     const materialId = match[1];
     const pageNumber = parseInt(match[2], 10);
 
+    const row = {
+      student_id: user.id,
+      lecture_id: lectureId,
+      material_id: materialId,
+      page_number: pageNumber,
+      drawing_data: actions as unknown as Record<string, unknown>[],
+    };
+
     const { error } = await supabase
       .from('student_drawings')
-      .upsert({
-        student_id: user.id,
-        lecture_id: lectureId,
-        material_id: materialId,
-        page_number: pageNumber,
-        drawing_data: actions as unknown as Record<string, unknown>[],
-      }, {
+      .upsert(row as any, {
         onConflict: 'student_id,material_id,page_number',
       });
 
