@@ -315,7 +315,24 @@ export default function MyClass() {
               ? '담당 클래스가 없습니다. 관리자에게 클래스 배정을 요청하세요.'
               : '생성된 클래스가 없습니다. + class 버튼을 눌러 새 클래스를 만드세요.'}
           </p>
-        ) : null}
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {lectures.map((lec) => {
+              const date = lec.description?.split('/')[0]?.trim() || '날짜 미정';
+              const isSelected = lec.id === selectedLectureId;
+              return (
+                <Button
+                  key={lec.id}
+                  variant={isSelected ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedLectureId(lec.id)}
+                >
+                  {date} · {lec.title}
+                </Button>
+              );
+            })}
+          </div>
+        )}
 
         {/* Selected Class Detail */}
         {selectedLecture && <Card className="bg-card">
