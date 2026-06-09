@@ -1,57 +1,22 @@
-## 문제 원인
+## 목표
+My Class 페이지 상단의 클래스 목록을 버튼 나열 대신 **드롭다운(Select)**으로 교체하여 클래스가 쌓여도 공간을 효율적으로 사용합니다.
 
-`/my-class` 진입 시 `profiles` 조회가 500 에러로 실패합니다.
+## 변경 내용
 
-응답:
-```
-{"code":"42P17","message":"infinite recursion detected in policy for relation \"whitelist\""}
-```
+### 1. MyClass.tsx - 클래스 선택 UI 교체
+- 기존에 추가한 `flex flex-wrap gap-2` 버튼 그룹을 제거
+- `shadcn/ui Select` 컴포넌트를 사용한 드롭다운으로 교체
+- 드롭다운 위치: 페이지 헤더 하단 또는 카드 상단
+- 드롭다운에 표시할 텍스트: `{날짜} · {강의 제목}` (기존과 동일한 형식)
+- 기본 선택값: `selectedLectureId` (첫 번째 강의 자동 선택 유지)
 
-`profiles` 가 실패하면 `useAuth`의 `profile`이 null 이 되어, `MyClass`의 `enabled: !!profile?.user_id` 조건 때문에 강의 목록 쿼리가 아예 실행되지 않습니다. 그래서 클래스가 전부 사라진 것처럼 보입니다.
+### 기술 세부사항
+- 파일: `src/pages/MyClass.tsx`
+- 컴포넌트: `src/components/ui/select.tsx` (`Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem`) 재사용
+- 상태: 기존 `selectedLectureId` + `setSelectedLectureId` 그대로 사용 — 추가 상태 불필요
+- 반응형: 드롭다운 너비는 화면 크기에 맞춰 유동적으로 조정 (`w-full` 또는 `lg:w-80` 등)
 
-### 순환 구조
-
-어제 적용한 보안 마이그레이션 이후 RLS 정책 체인이 아래처럼 꼬였습니다.
-
-```text
-profiles  (Speakers can view enrolled students)
-   └─ subquery → whitelist
-        └─ (Staff can view whitelist for assigned lectures)
-             └─ subquery → staff_lecture_assignments
-                  └─ (Speakers can view assignments for their lectures)
-                       └─ subquery → lectures
-                            └─ (Students can view lectures they have access to)
-                                 └─ subquery → whitelist  ← 재귀!
-```
-
-## 해결 방법
-
-RLS 정책 안에서 다른 테이블을 조인하는 대신, `SECURITY DEFINER` 함수로 권한 체크를 캡슐화하여 순환을 끊습니다 (프로젝트 메모리의 "RLS Recursion Fix" 패턴과 동일).
-
-### 새 SECURITY DEFINER 함수 추가
-
-1. `public.student_has_lecture_access(_lecture_id uuid, _email text)` — 화이트리스트에 등록된 수강생인지 확인
-2. `public.speaker_owns_lecture(_user_id uuid, _lecture_id uuid)` — 해당 강의의 연자인지 확인
-3. `public.staff_assigned_to_lecture(_user_id uuid, _lecture_id uuid)` — 해당 강의에 배정된 staff인지 확인
-
-모두 `SET search_path = public` 적용. `authenticated`에 EXECUTE 권한 부여.
-
-### RLS 정책 재작성
-
-순환을 일으키는 정책을 함수 기반으로 교체합니다.
-
-- `lectures`: "Students can view lectures they have access to"
-  → `student_has_lecture_access(lectures.id, auth.jwt() ->> 'email')`
-- `staff_lecture_assignments`: "Speakers can view assignments for their lectures"
-  → `speaker_owns_lecture(auth.uid(), lecture_id)`
-- `whitelist`: "Staff can view/update/delete whitelist for assigned lectures" 3개
-  → `staff_assigned_to_lecture(auth.uid(), lecture_id)`
-- `profiles`: "Speakers can view enrolled students"
-  → 함수로 묶거나, JWT 이메일 + 함수 기반 체크로 변경
-
-### 검증
-
-마이그레이션 후:
-- master 계정 (`omsrheesh@gmail.com`) 으로 `/my-class` 진입 → 클래스 2개 표시 확인
-- 수강생 계정으로 `/my-lectures` 진입 → 본인 강의 표시 확인
-- 네트워크 응답에 42P17 에러가 사라졌는지 확인
+### 예상 결과
+- 클래스 수가 늘어나도 상단 UI가 1줄로 유지됨
+- 선택 항목은 `{날짜} · {제목}` 형식으로 표시됨
+- 기존 자동 선택, 학생 테이블 불러오기 등 모든 동작 그대로 유지
