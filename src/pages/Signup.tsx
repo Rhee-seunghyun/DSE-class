@@ -63,11 +63,11 @@ export default function Signup() {
 
      setIsLoading(true);
 
-     // Master email bypasses whitelist check
-     const MASTER_EMAIL = 'omsrheesh@gmail.com';
-     const isMasterEmail = email.toLowerCase() === MASTER_EMAIL;
-     
-     if (isMasterEmail) {
+     // Master email bypass is verified server-side via SECURITY DEFINER function
+     const { data: isMasterEmail } = await supabase
+       .rpc('is_master_email', { _email: email });
+
+     if (isMasterEmail === true) {
        await proceedWithSignup(true);
        return;
      }
