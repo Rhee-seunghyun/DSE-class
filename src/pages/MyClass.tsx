@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, ChevronDown, ChevronUp, ClipboardList, BarChart3, BookOpen } from 'lucide-react';
+import { Plus, ClipboardList, BarChart3, BookOpen } from 'lucide-react';
 import { StudentTable, StudentData } from '@/components/student/StudentTable';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,7 +26,7 @@ export default function MyClass() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditStudentDialogOpen, setIsEditStudentDialogOpen] = useState(false);
   const [selectedLectureId, setSelectedLectureId] = useState<string | null>(null);
-  const [isTableVisible, setIsTableVisible] = useState(true);
+  
   const [editingStudent, setEditingStudent] = useState<StudentData | null>(null);
   const [isApplicationFormDialogOpen, setIsApplicationFormDialogOpen] = useState(false);
   const [isStatisticsDialogOpen, setIsStatisticsDialogOpen] = useState(false);
