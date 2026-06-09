@@ -316,21 +316,25 @@ export default function MyClass() {
               : '생성된 클래스가 없습니다. + class 버튼을 눌러 새 클래스를 만드세요.'}
           </p>
         ) : (
-          <div className="flex flex-wrap gap-2">
-            {lectures.map((lec) => {
-              const date = lec.description?.split('/')[0]?.trim() || '날짜 미정';
-              const isSelected = lec.id === selectedLectureId;
-              return (
-                <Button
-                  key={lec.id}
-                  variant={isSelected ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedLectureId(lec.id)}
-                >
-                  {date} · {lec.title}
-                </Button>
-              );
-            })}
+          <div className="w-full sm:max-w-md">
+            <Select
+              value={selectedLectureId ?? undefined}
+              onValueChange={(val) => setSelectedLectureId(val)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="클래스를 선택하세요" />
+              </SelectTrigger>
+              <SelectContent>
+                {lectures.map((lec) => {
+                  const date = lec.description?.split('/')[0]?.trim() || '날짜 미정';
+                  return (
+                    <SelectItem key={lec.id} value={lec.id}>
+                      {date} · {lec.title}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
           </div>
         )}
 
