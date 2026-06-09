@@ -18,6 +18,7 @@ import { QuestionsManageDialog } from '@/components/lecture/QuestionsManageDialo
 import { StaffAssignmentDialog } from '@/components/class/StaffAssignmentDialog';
 import { UserCog, MessageSquare } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function MyClass() {
   const { profile, role } = useAuth();
