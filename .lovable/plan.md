@@ -1,36 +1,57 @@
+## 문제 원인
 
+`/my-class` 진입 시 `profiles` 조회가 500 에러로 실패합니다.
 
-# 수강생 페이지 탐색 & 미리보기 기능
+응답:
+```
+{"code":"42P17","message":"infinite recursion detected in policy for relation \"whitelist\""}
+```
 
-## 요약
-PDF 뷰어에 (1) 페이지 번호 직접 입력하여 이동하는 기능과 (2) 페이지 썸네일 미리보기 패널을 추가합니다.
+`profiles` 가 실패하면 `useAuth`의 `profile`이 null 이 되어, `MyClass`의 `enabled: !!profile?.user_id` 조건 때문에 강의 목록 쿼리가 아예 실행되지 않습니다. 그래서 클래스가 전부 사라진 것처럼 보입니다.
 
-## 구현 계획
+### 순환 구조
 
-### 1. 페이지 번호 직접 입력 (페이지 찾기)
-- `PdfCanvasViewer.tsx`의 하단 네비게이션에서 현재 "3 / 10" 텍스트를 클릭하면 input으로 전환
-- 원하는 페이지 번호를 입력하고 Enter 또는 포커스 해제 시 해당 페이지로 이동
-- 범위 밖 번호는 자동 보정 (1 미만 → 1, 최대 초과 → 마지막 페이지)
+어제 적용한 보안 마이그레이션 이후 RLS 정책 체인이 아래처럼 꼬였습니다.
 
-### 2. 페이지 썸네일 미리보기 패널
-- 네비게이션 바에 "목차" 또는 격자 아이콘 버튼 추가
-- 클릭 시 좌측 또는 하단에 썸네일 목록 패널이 슬라이드로 표시
-- 각 페이지를 작은 canvas에 렌더링하여 썸네일로 표시 (lazy rendering — 보이는 것만)
-- 썸네일 클릭 시 해당 페이지로 즉시 이동
-- 현재 페이지는 테두리 강조 표시
-- 모바일(393px 뷰포트)에서는 하단 시트 형태로, 데스크톱에서는 좌측 패널로 표시
+```text
+profiles  (Speakers can view enrolled students)
+   └─ subquery → whitelist
+        └─ (Staff can view whitelist for assigned lectures)
+             └─ subquery → staff_lecture_assignments
+                  └─ (Speakers can view assignments for their lectures)
+                       └─ subquery → lectures
+                            └─ (Students can view lectures they have access to)
+                                 └─ subquery → whitelist  ← 재귀!
+```
 
-## 파일 변경 목록
+## 해결 방법
 
-| 파일 | 작업 |
-|------|------|
-| `src/components/lecture/PdfCanvasViewer.tsx` | 페이지 번호 입력 기능 + 썸네일 토글 버튼 추가 |
-| `src/components/lecture/PdfThumbnailPanel.tsx` | 신규 — 썸네일 미리보기 패널 컴포넌트 |
+RLS 정책 안에서 다른 테이블을 조인하는 대신, `SECURITY DEFINER` 함수로 권한 체크를 캡슐화하여 순환을 끊습니다 (프로젝트 메모리의 "RLS Recursion Fix" 패턴과 동일).
 
-## 기술 세부사항
+### 새 SECURITY DEFINER 함수 추가
 
-- 썸네일 렌더링: pdfjs-dist의 `getPage().render()`를 작은 scale(약 0.2)로 호출하여 소형 canvas에 그림
-- 성능: IntersectionObserver로 뷰포트에 보이는 썸네일만 렌더링 (lazy)
-- 썸네일 패널은 absolute/fixed 포지션으로 메인 PDF 위에 오버레이하되, 반투명 배경으로 구분
-- 패널 열기/닫기 상태는 로컬 state로 관리
+1. `public.student_has_lecture_access(_lecture_id uuid, _email text)` — 화이트리스트에 등록된 수강생인지 확인
+2. `public.speaker_owns_lecture(_user_id uuid, _lecture_id uuid)` — 해당 강의의 연자인지 확인
+3. `public.staff_assigned_to_lecture(_user_id uuid, _lecture_id uuid)` — 해당 강의에 배정된 staff인지 확인
 
+모두 `SET search_path = public` 적용. `authenticated`에 EXECUTE 권한 부여.
+
+### RLS 정책 재작성
+
+순환을 일으키는 정책을 함수 기반으로 교체합니다.
+
+- `lectures`: "Students can view lectures they have access to"
+  → `student_has_lecture_access(lectures.id, auth.jwt() ->> 'email')`
+- `staff_lecture_assignments`: "Speakers can view assignments for their lectures"
+  → `speaker_owns_lecture(auth.uid(), lecture_id)`
+- `whitelist`: "Staff can view/update/delete whitelist for assigned lectures" 3개
+  → `staff_assigned_to_lecture(auth.uid(), lecture_id)`
+- `profiles`: "Speakers can view enrolled students"
+  → 함수로 묶거나, JWT 이메일 + 함수 기반 체크로 변경
+
+### 검증
+
+마이그레이션 후:
+- master 계정 (`omsrheesh@gmail.com`) 으로 `/my-class` 진입 → 클래스 2개 표시 확인
+- 수강생 계정으로 `/my-lectures` 진입 → 본인 강의 표시 확인
+- 네트워크 응답에 42P17 에러가 사라졌는지 확인

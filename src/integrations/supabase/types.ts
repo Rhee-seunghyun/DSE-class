@@ -586,6 +586,26 @@ export type Database = {
         }
         Returns: boolean
       }
+      speaker_has_enrolled_student: {
+        Args: { _student_email: string; _user_id: string }
+        Returns: boolean
+      }
+      speaker_owns_lecture: {
+        Args: { _lecture_id: string; _user_id: string }
+        Returns: boolean
+      }
+      staff_assigned_to_lecture: {
+        Args: { _lecture_id: string; _user_id: string }
+        Returns: boolean
+      }
+      staff_assigned_to_student: {
+        Args: { _student_email: string; _user_id: string }
+        Returns: boolean
+      }
+      student_has_lecture_access: {
+        Args: { _email: string; _lecture_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "master" | "speaker" | "student" | "staff"
