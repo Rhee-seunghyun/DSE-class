@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, ChevronDown, ChevronUp, ClipboardList, BarChart3, BookOpen } from 'lucide-react';
+import { Plus, ClipboardList, BarChart3, BookOpen } from 'lucide-react';
 import { StudentTable, StudentData } from '@/components/student/StudentTable';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,7 +26,7 @@ export default function MyClass() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditStudentDialogOpen, setIsEditStudentDialogOpen] = useState(false);
   const [selectedLectureId, setSelectedLectureId] = useState<string | null>(null);
-  const [isTableVisible, setIsTableVisible] = useState(true);
+  
   const [editingStudent, setEditingStudent] = useState<StudentData | null>(null);
   const [isApplicationFormDialogOpen, setIsApplicationFormDialogOpen] = useState(false);
   const [isStatisticsDialogOpen, setIsStatisticsDialogOpen] = useState(false);
@@ -317,88 +317,78 @@ export default function MyClass() {
               : '생성된 클래스가 없습니다. + class 버튼을 눌러 새 클래스를 만드세요.'}
           </p>
         ) : (
-          <div className="w-full sm:max-w-md">
-            <Select
-              value={selectedLectureId ?? undefined}
-              onValueChange={(val) => setSelectedLectureId(val)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="클래스를 선택하세요" />
-              </SelectTrigger>
-              <SelectContent>
-                {lectures.map((lec) => {
-                  const date = lec.description?.split('/')[0]?.trim() || '날짜 미정';
-                  return (
-                    <SelectItem key={lec.id} value={lec.id}>
-                      {date} · {lec.title}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-
-        {/* Selected Class Detail */}
-        {selectedLecture && <Card className="bg-card">
+          <Card className="bg-card">
             <CardHeader className="pb-2">
-               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-                <Button
-                  variant="secondary"
-                   className="gap-2 font-medium w-full lg:w-auto justify-start"
-                  onClick={() => setIsTableVisible(!isTableVisible)}
-                >
-                  {selectedLecture.description?.split('/')[0]?.trim() || '날짜 미정'} {selectedLecture.title}
-                  {isTableVisible ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                </Button>
-                 <div className="flex flex-wrap gap-2">
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                     className="gap-1 flex-1 sm:flex-none"
-                    onClick={() => setIsStatisticsDialogOpen(true)}
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                <div className="w-full lg:w-auto lg:min-w-[280px]">
+                  <Select
+                    value={selectedLectureId ?? undefined}
+                    onValueChange={(val) => setSelectedLectureId(val)}
                   >
-                    <BarChart3 className="w-4 h-4" />
-                     <span className="hidden sm:inline">신청서 </span>통계
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                     className="gap-1 flex-1 sm:flex-none"
-                    onClick={() => setIsApplicationFormDialogOpen(true)}
-                  >
-                    <ClipboardList className="w-4 h-4" />
-                     <span className="hidden sm:inline">세미나 </span>신청서
-                  </Button>
-                  {/* 질문받기 버튼 */}
-                  <QuestionsManageDialog 
-                    lectureId={selectedLecture.id} 
-                    lectureTitle={selectedLecture.title} 
-                  />
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                     className="gap-1 flex-1 sm:flex-none"
-                    onClick={() => setIsMaterialsDialogOpen(true)}
-                  >
-                    <BookOpen className="w-4 h-4" />
-                     <span className="hidden sm:inline">강의자료 </span>관리
-                  </Button>
-                  {role === 'master' && (
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                       className="gap-1 flex-1 sm:flex-none"
-                      onClick={() => setIsStaffAssignmentDialogOpen(true)}
-                    >
-                      <UserCog className="w-4 h-4" />
-                       <span className="hidden sm:inline">Staff </span>관리
-                    </Button>
-                  )}
+                    <SelectTrigger>
+                      <SelectValue placeholder="클래스를 선택하세요" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {lectures.map((lec) => {
+                        const date = lec.description?.split('/')[0]?.trim() || '날짜 미정';
+                        return (
+                          <SelectItem key={lec.id} value={lec.id}>
+                            {date} · {lec.title}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
                 </div>
+                {selectedLecture && (
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1 flex-1 sm:flex-none"
+                      onClick={() => setIsStatisticsDialogOpen(true)}
+                    >
+                      <BarChart3 className="w-4 h-4" />
+                      <span className="hidden sm:inline">신청서 </span>통계
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1 flex-1 sm:flex-none"
+                      onClick={() => setIsApplicationFormDialogOpen(true)}
+                    >
+                      <ClipboardList className="w-4 h-4" />
+                      <span className="hidden sm:inline">세미나 </span>신청서
+                    </Button>
+                    <QuestionsManageDialog
+                      lectureId={selectedLecture.id}
+                      lectureTitle={selectedLecture.title}
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1 flex-1 sm:flex-none"
+                      onClick={() => setIsMaterialsDialogOpen(true)}
+                    >
+                      <BookOpen className="w-4 h-4" />
+                      <span className="hidden sm:inline">강의자료 </span>관리
+                    </Button>
+                    {role === 'master' && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1 flex-1 sm:flex-none"
+                        onClick={() => setIsStaffAssignmentDialogOpen(true)}
+                      >
+                        <UserCog className="w-4 h-4" />
+                        <span className="hidden sm:inline">Staff </span>관리
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
             </CardHeader>
-            {isTableVisible && (
+            {selectedLecture && (
               <CardContent>
                 <StudentTable
                   students={(students || []) as StudentData[]}
@@ -410,7 +400,9 @@ export default function MyClass() {
                 />
               </CardContent>
             )}
-          </Card>}
+          </Card>
+        )}
+
 
         {/* Edit Student Dialog */}
         <Dialog open={isEditStudentDialogOpen} onOpenChange={setIsEditStudentDialogOpen}>
