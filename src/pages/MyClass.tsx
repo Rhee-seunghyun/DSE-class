@@ -18,7 +18,7 @@ import { QuestionsManageDialog } from '@/components/lecture/QuestionsManageDialo
 import { StaffAssignmentDialog } from '@/components/class/StaffAssignmentDialog';
 import { UserCog, MessageSquare } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 
 export default function MyClass() {
   const { profile, role } = useAuth();
@@ -89,9 +89,11 @@ export default function MyClass() {
     enabled: !!profile?.user_id
   });
 
-  // Auto-select first lecture when data loads
+  // Auto-select first lecture; only reset if current selection disappears
   useEffect(() => {
-    if (lectures && lectures.length > 0 && !selectedLectureId) {
+    if (!lectures || lectures.length === 0) return;
+    const exists = selectedLectureId && lectures.some(l => l.id === selectedLectureId);
+    if (!exists) {
       setSelectedLectureId(lectures[0].id);
     }
   }, [lectures, selectedLectureId]);
@@ -321,24 +323,24 @@ export default function MyClass() {
             <CardHeader className="pb-2">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
                 <div className="w-full lg:w-auto lg:min-w-[280px]">
-                  <Select
-                    value={selectedLectureId ?? undefined}
-                    onValueChange={(val) => setSelectedLectureId(val)}
+                  <Label htmlFor="class-select" className="text-xs text-muted-foreground mb-1 block">
+                    클래스 선택
+                  </Label>
+                  <select
+                    id="class-select"
+                    value={selectedLectureId ?? ''}
+                    onChange={(e) => setSelectedLectureId(e.target.value)}
+                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="클래스를 선택하세요" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {lectures.map((lec) => {
-                        const date = lec.description?.split('/')[0]?.trim() || '날짜 미정';
-                        return (
-                          <SelectItem key={lec.id} value={lec.id}>
-                            {date} · {lec.title}
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
+                    {lectures.map((lec) => {
+                      const date = lec.description?.split('/')[0]?.trim() || '날짜 미정';
+                      return (
+                        <option key={lec.id} value={lec.id}>
+                          {date} · {lec.title}
+                        </option>
+                      );
+                    })}
+                  </select>
                 </div>
                 {selectedLecture && (
                   <div className="flex flex-wrap gap-2">
